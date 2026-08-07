@@ -50,7 +50,7 @@ button, input, textarea { font: inherit; }
 
 .hero { min-height:100svh; position:relative; display:flex; align-items:center; overflow:hidden; isolation:isolate; }
 .hero::after { content:""; position:absolute; inset:0; z-index:-1; background:linear-gradient(90deg,rgba(2,3,5,.95) 0%,rgba(2,3,5,.74) 38%,rgba(2,3,5,.15) 75%), linear-gradient(0deg,rgba(2,3,5,.85),transparent 38%); }
-.hero-media { position:absolute; z-index:-2; inset:-4%; background:url('/deepiq-hero.png') center right/cover no-repeat; transform:scale(1.05); }
+.hero-media { position:absolute; z-index:-2; inset:-4%; background:url('./deepiq-hero.png') center right/cover no-repeat; transform:scale(1.05); }
 .hero-grid { position:absolute; inset:0; z-index:-1; opacity:.1; background-image:linear-gradient(rgba(255,255,255,.2) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.2) 1px,transparent 1px); background-size:100px 100px; mask-image:linear-gradient(90deg,black,transparent 72%); }
 .hero-orbit { position:absolute; width:min(41vw,680px); aspect-ratio:1; border:1px solid rgba(46,156,255,.25); border-radius:50%; right:-7vw; top:17%; animation:spin 35s linear infinite; }
 .hero-orbit span:first-child { position:absolute; width:10px; height:10px; border-radius:50%; left:12%; top:12%; background:var(--blue); box-shadow:0 0 22px var(--blue); }
