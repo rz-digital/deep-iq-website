@@ -38,7 +38,7 @@ button, input, textarea { font: inherit; }
 .brand { display:inline-flex; position:relative; align-items:center; font:500 31px/1 var(--condensed); letter-spacing:-.04em; z-index:2; }
 .brand img { width:27px; height:43px; object-fit:contain; margin-right:9px; flex:none; }
 .brand b { color:var(--blue-bright); font-weight:600; }
-.brand i { position:absolute; width:5px; height:5px; border-radius:50%; background:var(--blue); right:-9px; top:-1px; box-shadow:0 0 14px var(--blue); }
+
 .desktop-nav { display:flex; align-items:center; gap:clamp(20px,2.4vw,44px); font:400 13px/1 var(--sans); }
 .desktop-nav a { position:relative; color:#dbe1e9; }
 .desktop-nav a::after { content:""; position:absolute; left:0; right:100%; bottom:-8px; height:1px; background:var(--blue); transition:right .3s; }

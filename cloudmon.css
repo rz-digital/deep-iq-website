@@ -32,7 +32,7 @@ section[id] { scroll-margin-top: 82px; }
 .deepiq-brand { position:relative; display:inline-flex; align-items:center; flex:none; z-index:3; font:500 30px/1 var(--condensed); letter-spacing:-.04em; }
 .deepiq-brand img { width:27px; height:43px; object-fit:contain; margin-right:9px; }
 .deepiq-brand b { color:#2e9cff; font-weight:600; }
-.deepiq-brand i { position:absolute; right:-9px; top:-1px; width:5px; height:5px; border-radius:50%; background:var(--blue); box-shadow:0 0 13px var(--blue); }
+
 .desktop-nav { display:flex; justify-content:center; align-items:center; gap:clamp(18px,2vw,36px); margin-left:auto; font-size:12px; }
 .desktop-nav a { position:relative; color:#c7d2df; }
 .desktop-nav a::after { content:""; position:absolute; right:100%; bottom:-8px; left:0; height:1px; background:var(--cyan); transition:right .25s; }
