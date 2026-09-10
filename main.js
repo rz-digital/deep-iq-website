@@ -1,6 +1,66 @@
 const $ = (selector, scope = document) => scope.querySelector(selector);
 const $$ = (selector, scope = document) => [...scope.querySelectorAll(selector)];
 
+let siteContent;
+
+const loadPageStructure = async () => {
+  const response = await fetch(`${import.meta.env.BASE_URL}page.json`);
+  if (!response.ok) throw new Error(`Page request failed with status ${response.status}`);
+  const page = await response.json();
+  document.body.innerHTML = page.body;
+};
+
+const applySiteContent = (content) => {
+  siteContent = content;
+  document.title = content.meta.title;
+  $('meta[name="description"]')?.setAttribute('content', content.meta.description);
+
+  Object.entries(content.html).forEach(([selector, markup]) => {
+    $$(selector).forEach((element) => { element.innerHTML = markup; });
+  });
+  Object.entries(content.text).forEach(([selector, value]) => {
+    $$(selector).forEach((element) => { element.textContent = value; });
+  });
+  content.attributes.forEach(({ selector, name, value }) => {
+    $$(selector).forEach((element) => element.setAttribute(name, value));
+  });
+};
+
+const loadSiteContent = async () => {
+  const response = await fetch(`${import.meta.env.BASE_URL}site-content.json`);
+  if (!response.ok) throw new Error(`Content request failed with status ${response.status}`);
+  applySiteContent(await response.json());
+};
+
+const prepareFooterStructure = () => {
+  const footer = $('.site-footer');
+  const footerBrand = $('.footer-brand');
+  if (!footer || !footerBrand) return;
+
+  if (!footerBrand.parentElement?.classList.contains('footer-identity')) {
+    const identity = document.createElement('div');
+    const details = document.createElement('address');
+    identity.className = 'footer-identity';
+    details.className = 'footer-details';
+    footerBrand.replaceWith(identity);
+    identity.append(footerBrand, details);
+  }
+
+  if (!$('.footer-actions', footer)) {
+    const actions = document.createElement('div');
+    actions.className = 'footer-actions';
+    footer.insertBefore(actions, $('.copyright', footer));
+  }
+};
+
+const prepareWhatsappButton = () => {
+  if ($('.whatsapp-button')) return;
+  const button = document.createElement('a');
+  button.className = 'whatsapp-button';
+  document.body.append(button);
+};
+
+const initializeSite = () => {
 const loader = $('.page-loader');
 const dismissLoader = () => window.setTimeout(() => loader?.classList.add('loaded'), 450);
 if (document.readyState === 'loading') {
@@ -231,18 +291,77 @@ if (canvas && context) {
   });
 }
 
-const form = $('#contact-form');
-form?.addEventListener('submit', (event) => {
-  event.preventDefault();
-  const status = $('.form-status', form);
-  const button = $('button', form);
-  button.disabled = true;
-  button.firstChild.textContent = 'SENDING... ';
-  window.setTimeout(() => {
-    status.textContent = 'Thanks — your message is ready for the DeepIQ team.';
-    button.firstChild.textContent = 'MESSAGE SENT ';
-    form.reset();
-  }, 800);
-});
+const productSelect = $('[data-product-select]');
+if (productSelect) {
+  const trigger = $('.product-select-trigger', productSelect);
+  const selectedLabel = $('.product-select-value', productSelect);
+  const input = $('.product-select-input', productSelect);
+  const options = $$('.product-option', productSelect);
+
+  const setDropdownOpen = (open) => {
+    productSelect.classList.toggle('open', open);
+    trigger.setAttribute('aria-expanded', String(open));
+  };
+
+  trigger.addEventListener('click', () => {
+    setDropdownOpen(!productSelect.classList.contains('open'));
+  });
+
+  options.forEach((option, index) => {
+    option.addEventListener('click', () => {
+      input.value = option.dataset.value;
+      selectedLabel.textContent = option.textContent;
+      options.forEach((item) => item.setAttribute('aria-selected', String(item === option)));
+      setDropdownOpen(false);
+      trigger.focus();
+    });
+
+    option.addEventListener('keydown', (event) => {
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        const direction = event.key === 'ArrowDown' ? 1 : -1;
+        options[(index + direction + options.length) % options.length].focus();
+      }
+    });
+  });
+
+  trigger.addEventListener('keydown', (event) => {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setDropdownOpen(true);
+      options[0]?.focus();
+    }
+  });
+
+  document.addEventListener('click', (event) => {
+    if (!productSelect.contains(event.target)) setDropdownOpen(false);
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && productSelect.classList.contains('open')) {
+      setDropdownOpen(false);
+      trigger.focus();
+    }
+  });
+}
 
 $('#year').textContent = new Date().getFullYear();
+};
+
+const startSite = async () => {
+  await loadPageStructure();
+  prepareFooterStructure();
+  prepareWhatsappButton();
+  await loadSiteContent();
+  initializeSite();
+  const anchorTarget = document.getElementById(window.location.hash.slice(1));
+  if (anchorTarget) {
+    anchorTarget.querySelectorAll('.reveal').forEach((element) => element.classList.add('in-view'));
+    requestAnimationFrame(() => anchorTarget.scrollIntoView());
+  }
+};
+
+startSite().catch((error) => {
+  console.error('The JSON page could not be loaded.', error);
+  $('#app').textContent = `Unable to load the page: ${error.message}`;
+});
