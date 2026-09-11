@@ -1,25 +1,10 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="MiPhi enterprise storage solutions from DeepIQ — high-performance SSD infrastructure engineered for AI, cloud, data centres and modern enterprise workloads." />
-    <meta name="theme-color" content="#050506" />
-    <title>MiPhi Enterprise Storage | DeepIQ</title>
-    <link rel="icon" type="image/svg+xml" href="./deepiq-logo.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="./miphi.css" />
-  </head>
-  <body>
-    <a class="skip-link" href="#main-content">Skip to content</a>
+const a={title:"MiPhi Enterprise Storage | DeepIQ",description:"MiPhi enterprise storage solutions from DeepIQ — high-performance SSD infrastructure engineered for AI, cloud, data centres and modern enterprise workloads.",theme:"#050506",body:`<a class="skip-link" href="#main-content">Skip to content</a>
     <div class="reading-progress" aria-hidden="true"><span></span></div>
     <div class="cursor-aura" aria-hidden="true"></div>
 
     <header class="miphi-header" data-header>
-      <a class="deepiq-brand" href="./index.html" aria-label="DeepIQ home">
-        <img src="./deepiq-logo.svg" alt="" />
+      <a class="deepiq-brand" href="/" aria-label="DeepIQ home">
+        <img src="/deepiq-logo.svg" alt="" />
         <span>DEEP</span><b>IQ</b>
       </a>
       <nav class="desktop-nav" aria-label="MiPhi page navigation">
@@ -28,7 +13,7 @@
         <a href="#engineering">Engineering</a>
         <a href="#sri-lanka">MiPhi in Sri Lanka</a>
       </nav>
-      <a class="header-cta" href="./index.html#contact">Explore with DeepIQ <span aria-hidden="true">↗</span></a>
+      <a class="header-cta" href="/#contact">Explore with DeepIQ <span aria-hidden="true">↗</span></a>
       <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-nav" aria-label="Open navigation"><span></span><span></span></button>
     </header>
 
@@ -38,9 +23,9 @@
         <a href="#workloads"><span>02</span>Workloads</a>
         <a href="#engineering"><span>03</span>Engineering</a>
         <a href="#sri-lanka"><span>04</span>MiPhi in Sri Lanka</a>
-        <a href="./index.html#contact"><span>05</span>Talk to DeepIQ</a>
+        <a href="/#contact"><span>05</span>Talk to DeepIQ</a>
       </nav>
-      <a class="mobile-back" href="./index.html">← Back to DeepIQ</a>
+      <a class="mobile-back" href="/">← Back to DeepIQ</a>
     </div>
 
     <main id="main-content">
@@ -55,7 +40,7 @@
           <p class="hero-manifesto">Powering the data behind<br />the AI-driven future.</p>
           <p class="hero-lead">Enterprise storage. Engineered for performance. Built for what’s next.</p>
           <div class="hero-actions">
-            <a class="primary-button" href="./index.html#contact">Explore with DeepIQ <span aria-hidden="true">↗</span></a>
+            <a class="primary-button" href="/#contact">Explore with DeepIQ <span aria-hidden="true">↗</span></a>
             <a class="ghost-button" href="#foundation">Discover MiPhi <span aria-hidden="true">↓</span></a>
           </div>
         </div>
@@ -224,17 +209,13 @@
           <p class="overline">MIPHI SEMICONDUCTORS</p>
           <h2 id="final-heading">Powering data.<br /><em>Enabling AI.</em><br />Accelerating tomorrow.</h2>
           <p>Explore MiPhi enterprise storage solutions with DeepIQ.</p>
-          <div class="final-actions"><a class="primary-button" href="./index.html#contact">Talk to DeepIQ <span aria-hidden="true">↗</span></a><a class="official-link" href="https://www.miphi.in/" target="_blank" rel="noopener noreferrer">Visit MiPhi <span aria-hidden="true">↗</span></a></div>
+          <div class="final-actions"><a class="primary-button" href="/#contact">Talk to DeepIQ <span aria-hidden="true">↗</span></a><a class="official-link" href="https://www.miphi.in/" target="_blank" rel="noopener noreferrer">Visit MiPhi <span aria-hidden="true">↗</span></a></div>
         </div>
       </section>
     </main>
 
     <footer class="miphi-footer">
-      <a class="deepiq-brand footer-brand" href="./index.html"><img src="./deepiq-logo.svg" alt="" /><span>DEEP</span><b>IQ</b></a>
+      <a class="deepiq-brand footer-brand" href="/"><img src="/deepiq-logo.svg" alt="" /><span>DEEP</span><b>IQ</b></a>
       <p>Authorised MiPhi Agent<br />Sri Lanka</p>
       <div><a href="https://www.miphi.in/" target="_blank" rel="noopener noreferrer">miphi.in ↗</a><span>© <b id="year"></b> DeepIQ</span></div>
-    </footer>
-    <script type="module" src="./miphi.js"></script>
-    <script type="module" src="./miphi-wizard.js"></script>
-  </body>
-</html>
+    </footer>`};export{a as default};

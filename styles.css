@@ -354,3 +354,5 @@ button, input, textarea { font: inherit; }
   .story-future h3 { font-size:3.45rem; }
 }
 @media (prefers-reduced-motion:reduce) { .story-signal { animation:none; } }
+
+.page-error { display:grid; min-height:100svh; margin:0; place-items:center; padding:32px; background:#050608; color:#dcecff; font:400 clamp(1.15rem,2vw,1.65rem)/1.5 var(--sans); text-align:center; }

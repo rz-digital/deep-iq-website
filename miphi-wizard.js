@@ -1,3 +1,4 @@
+export default function mount(scope) {
 'use strict';
 
 const select = (selector, scope = document) => scope.querySelector(selector);
@@ -81,10 +82,10 @@ class WorkloadWizardVisualizer {
     this.resize = this.resize.bind(this);
     if (!this.context) return;
     if ('ResizeObserver' in window) {
-      this.resizeObserver = new ResizeObserver(this.resize);
+      this.resizeObserver = scope.observe(ResizeObserver, this.resize);
       this.resizeObserver.observe(canvas);
     } else {
-      window.addEventListener('resize', this.resize);
+      scope.on(window, 'resize', this.resize);
     }
   }
 
@@ -108,13 +109,13 @@ class WorkloadWizardVisualizer {
   start() {
     if (!this.context || this.running) return;
     this.running = true;
-    this.frame = requestAnimationFrame(this.draw);
+    this.frame = scope.requestAnimationFrame(this.draw);
   }
 
   stop() {
     if (!this.running) return;
     this.running = false;
-    cancelAnimationFrame(this.frame);
+    scope.cancelAnimationFrame(this.frame);
   }
 
   resize() {
@@ -133,7 +134,7 @@ class WorkloadWizardVisualizer {
   draw() {
     if (!this.running) return;
     this.drawFrame(performance.now() * 0.001);
-    this.frame = requestAnimationFrame(this.draw);
+    this.frame = scope.requestAnimationFrame(this.draw);
   }
 
   drawFrame(time) {
@@ -714,7 +715,7 @@ const openWorkloadWizard = (card) => {
   document.body.classList.add('workload-wizard-open');
   workloadVisualizer.open(key);
 
-  requestAnimationFrame(() => requestAnimationFrame(() => {
+  scope.requestAnimationFrame(() => scope.requestAnimationFrame(() => {
     const targetRect = workloadWizardSelectedCard.getBoundingClientRect();
     if (!workloadReducedMotion && typeof workloadWizardSelectedCard.animate === 'function' && targetRect.width && targetRect.height) {
       workloadWizardSelectedCard.animate([
@@ -733,11 +734,11 @@ const closeWorkloadWizard = () => {
   if (workloadWizard?.open) workloadWizard.close();
 };
 
-workloadCards.forEach((card) => card.addEventListener('click', () => openWorkloadWizard(card)));
+workloadCards.forEach((card) => scope.on(card, 'click', () => openWorkloadWizard(card)));
 
 workloadWizardStepButtons.forEach((button) => {
-  button.addEventListener('click', () => renderWorkloadWizardStep(Number(button.dataset.workloadWizardStep)));
-  button.addEventListener('keydown', (event) => {
+  scope.on(button, 'click', () => renderWorkloadWizardStep(Number(button.dataset.workloadWizardStep)));
+  scope.on(button, 'keydown', (event) => {
     if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
     event.preventDefault();
     const direction = event.key === 'ArrowRight' ? 1 : -1;
@@ -747,16 +748,16 @@ workloadWizardStepButtons.forEach((button) => {
   });
 });
 
-workloadWizardPrevious?.addEventListener('click', () => renderWorkloadWizardStep(Math.max(0, activeWorkloadStep - 1)));
-workloadWizardNext?.addEventListener('click', () => {
+scope.on(workloadWizardPrevious, 'click', () => renderWorkloadWizardStep(Math.max(0, activeWorkloadStep - 1)));
+scope.on(workloadWizardNext, 'click', () => {
   if (activeWorkloadStep === workloadWizardSteps.length - 1) closeWorkloadWizard();
   else renderWorkloadWizardStep(activeWorkloadStep + 1);
 });
-select('[data-workload-wizard-close]', workloadWizard)?.addEventListener('click', closeWorkloadWizard);
-workloadWizard?.addEventListener('click', (event) => {
+scope.on(select('[data-workload-wizard-close]', workloadWizard), 'click', closeWorkloadWizard);
+scope.on(workloadWizard, 'click', (event) => {
   if (event.target === workloadWizard) closeWorkloadWizard();
 });
-workloadWizard?.addEventListener('close', () => {
+scope.on(workloadWizard, 'close', () => {
   document.body.classList.remove('workload-wizard-open');
   workloadVisualizer.close();
   activeWorkloadCard?.classList.remove('is-wizard-source');
@@ -764,8 +765,9 @@ workloadWizard?.addEventListener('close', () => {
   activeWorkloadCard = null;
   returnTarget?.focus({ preventScroll:true });
 });
-document.addEventListener('visibilitychange', () => {
+scope.on(document, 'visibilitychange', () => {
   if (!workloadWizard?.open || workloadReducedMotion) return;
   if (document.hidden) workloadVisualizer.stop();
   else workloadVisualizer.start();
 });
+}

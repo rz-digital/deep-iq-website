@@ -1,12 +1,14 @@
+export default async function mount(scope) {
 const $ = (selector, scope = document) => scope.querySelector(selector);
 const $$ = (selector, scope = document) => [...scope.querySelectorAll(selector)];
 
 let siteContent;
 
 const loadPageStructure = async () => {
-  const response = await fetch(`${import.meta.env.BASE_URL}page.json`);
+  const response = await fetch(`${import.meta.env.BASE_URL}page.json`, { signal: scope.signal });
   if (!response.ok) throw new Error(`Page request failed with status ${response.status}`);
   const page = await response.json();
+  scope.signal.throwIfAborted();
   document.body.innerHTML = page.body;
 };
 
@@ -27,9 +29,11 @@ const applySiteContent = (content) => {
 };
 
 const loadSiteContent = async () => {
-  const response = await fetch(`${import.meta.env.BASE_URL}site-content.json`);
+  const response = await fetch(`${import.meta.env.BASE_URL}site-content.json`, { signal: scope.signal });
   if (!response.ok) throw new Error(`Content request failed with status ${response.status}`);
-  applySiteContent(await response.json());
+  const content = await response.json();
+  scope.signal.throwIfAborted();
+  applySiteContent(content);
 };
 
 const prepareFooterStructure = () => {
@@ -62,19 +66,19 @@ const prepareWhatsappButton = () => {
 
 const initializeSite = () => {
 const loader = $('.page-loader');
-const dismissLoader = () => window.setTimeout(() => loader?.classList.add('loaded'), 450);
+const dismissLoader = () => scope.setTimeout(() => loader?.classList.add('loaded'), 450);
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', dismissLoader, { once: true });
+  scope.on(document, 'DOMContentLoaded', dismissLoader, { once: true });
 } else {
   dismissLoader();
 }
 // Never let a slow third-party font or image request trap the visitor behind the loader.
-window.setTimeout(() => loader?.classList.add('loaded'), 2200);
+scope.setTimeout(() => loader?.classList.add('loaded'), 2200);
 
 const header = $('[data-header]');
 const syncHeader = () => header?.classList.toggle('scrolled', window.scrollY > 30);
 syncHeader();
-window.addEventListener('scroll', syncHeader, { passive: true });
+scope.on(window, 'scroll', syncHeader, { passive: true });
 
 const menuButton = $('.menu-toggle');
 const mobileNav = $('.mobile-nav');
@@ -86,7 +90,7 @@ const closeMenu = () => {
   document.body.style.overflow = '';
 };
 
-menuButton?.addEventListener('click', () => {
+scope.on(menuButton, 'click', () => {
   const isOpen = !mobileNav?.classList.contains('open');
   menuButton.classList.toggle('open', isOpen);
   menuButton.setAttribute('aria-expanded', String(isOpen));
@@ -94,9 +98,9 @@ menuButton?.addEventListener('click', () => {
   mobileNav?.setAttribute('aria-hidden', String(!isOpen));
   document.body.style.overflow = isOpen ? 'hidden' : '';
 });
-$$('.mobile-nav a').forEach((link) => link.addEventListener('click', closeMenu));
+$$('.mobile-nav a').forEach((link) => scope.on(link, 'click', closeMenu));
 
-const revealObserver = new IntersectionObserver((entries) => {
+const revealObserver = scope.observe(IntersectionObserver, (entries) => {
   entries.forEach((entry) => {
     if (entry.isIntersecting) {
       entry.target.classList.add('in-view');
@@ -117,12 +121,12 @@ const animateCount = (element) => {
     const progress = Math.min((now - start) / duration, 1);
     const current = Math.round(target * easeOut(progress));
     element.textContent = `${prefix}${current}${suffix}`;
-    if (progress < 1) requestAnimationFrame(tick);
+    if (progress < 1) scope.requestAnimationFrame(tick);
   };
-  requestAnimationFrame(tick);
+  scope.requestAnimationFrame(tick);
 };
 
-const countObserver = new IntersectionObserver((entries) => {
+const countObserver = scope.observe(IntersectionObserver, (entries) => {
   entries.forEach((entry) => {
     if (entry.isIntersecting) {
       animateCount(entry.target);
@@ -134,7 +138,7 @@ $$('[data-count]').forEach((number) => countObserver.observe(number));
 
 const cursorGlow = $('.cursor-glow');
 if (matchMedia('(pointer:fine)').matches) {
-  window.addEventListener('pointermove', (event) => {
+  scope.on(window, 'pointermove', (event) => {
     if (!cursorGlow) return;
     cursorGlow.style.opacity = '1';
     cursorGlow.style.left = `${event.clientX}px`;
@@ -144,7 +148,7 @@ if (matchMedia('(pointer:fine)').matches) {
 
 const parallax = $('[data-parallax]');
 if (parallax && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
-  window.addEventListener('scroll', () => {
+  scope.on(window, 'scroll', () => {
     const offset = Math.min(window.scrollY * 0.12, 90);
     parallax.style.transform = `scale(1.05) translateY(${offset}px)`;
   }, { passive: true });
@@ -191,7 +195,7 @@ if (marquee && marqueeTrack) {
 
     wrapPosition();
     marqueeTrack.style.transform = `translate3d(${position}px, 0, 0)`;
-    requestAnimationFrame(renderMarquee);
+    scope.requestAnimationFrame(renderMarquee);
   };
 
   const finishDrag = (event) => {
@@ -205,7 +209,7 @@ if (marquee && marqueeTrack) {
     activePointer = null;
   };
 
-  marquee.addEventListener('pointerdown', (event) => {
+  scope.on(marquee, 'pointerdown', (event) => {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
     dragging = true;
     activePointer = event.pointerId;
@@ -216,7 +220,7 @@ if (marquee && marqueeTrack) {
     marquee.setPointerCapture(event.pointerId);
   });
 
-  marquee.addEventListener('pointermove', (event) => {
+  scope.on(marquee, 'pointermove', (event) => {
     if (!dragging || event.pointerId !== activePointer) return;
     const now = performance.now();
     const movement = event.clientX - previousX;
@@ -229,12 +233,12 @@ if (marquee && marqueeTrack) {
     marqueeTrack.style.transform = `translate3d(${position}px, 0, 0)`;
   });
 
-  marquee.addEventListener('pointerup', finishDrag);
-  marquee.addEventListener('pointercancel', finishDrag);
-  marquee.addEventListener('lostpointercapture', finishDrag);
-  window.addEventListener('resize', measureMarquee);
+  scope.on(marquee, 'pointerup', finishDrag);
+  scope.on(marquee, 'pointercancel', finishDrag);
+  scope.on(marquee, 'lostpointercapture', finishDrag);
+  scope.on(window, 'resize', measureMarquee);
   measureMarquee();
-  requestAnimationFrame(renderMarquee);
+  scope.requestAnimationFrame(renderMarquee);
 }
 
 const canvas = $('#signal-canvas');
@@ -278,15 +282,15 @@ const drawSignal = () => {
       }
     }
   });
-  animationFrame = requestAnimationFrame(drawSignal);
+  animationFrame = scope.requestAnimationFrame(drawSignal);
 };
 
 if (canvas && context) {
   resizeCanvas();
   if (!matchMedia('(prefers-reduced-motion: reduce)').matches) drawSignal();
-  window.addEventListener('resize', resizeCanvas);
-  document.addEventListener('visibilitychange', () => {
-    if (document.hidden) cancelAnimationFrame(animationFrame);
+  scope.on(window, 'resize', resizeCanvas);
+  scope.on(document, 'visibilitychange', () => {
+    if (document.hidden) scope.cancelAnimationFrame(animationFrame);
     else if (!matchMedia('(prefers-reduced-motion: reduce)').matches) drawSignal();
   });
 }
@@ -303,12 +307,12 @@ if (productSelect) {
     trigger.setAttribute('aria-expanded', String(open));
   };
 
-  trigger.addEventListener('click', () => {
+  scope.on(trigger, 'click', () => {
     setDropdownOpen(!productSelect.classList.contains('open'));
   });
 
   options.forEach((option, index) => {
-    option.addEventListener('click', () => {
+    scope.on(option, 'click', () => {
       input.value = option.dataset.value;
       selectedLabel.textContent = option.textContent;
       options.forEach((item) => item.setAttribute('aria-selected', String(item === option)));
@@ -316,7 +320,7 @@ if (productSelect) {
       trigger.focus();
     });
 
-    option.addEventListener('keydown', (event) => {
+    scope.on(option, 'keydown', (event) => {
       if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
         event.preventDefault();
         const direction = event.key === 'ArrowDown' ? 1 : -1;
@@ -325,7 +329,7 @@ if (productSelect) {
     });
   });
 
-  trigger.addEventListener('keydown', (event) => {
+  scope.on(trigger, 'keydown', (event) => {
     if (event.key === 'ArrowDown') {
       event.preventDefault();
       setDropdownOpen(true);
@@ -333,11 +337,11 @@ if (productSelect) {
     }
   });
 
-  document.addEventListener('click', (event) => {
+  scope.on(document, 'click', (event) => {
     if (!productSelect.contains(event.target)) setDropdownOpen(false);
   });
 
-  document.addEventListener('keydown', (event) => {
+  scope.on(document, 'keydown', (event) => {
     if (event.key === 'Escape' && productSelect.classList.contains('open')) {
       setDropdownOpen(false);
       trigger.focus();
@@ -348,20 +352,9 @@ if (productSelect) {
 $('#year').textContent = new Date().getFullYear();
 };
 
-const startSite = async () => {
-  await loadPageStructure();
-  prepareFooterStructure();
-  prepareWhatsappButton();
-  await loadSiteContent();
-  initializeSite();
-  const anchorTarget = document.getElementById(window.location.hash.slice(1));
-  if (anchorTarget) {
-    anchorTarget.querySelectorAll('.reveal').forEach((element) => element.classList.add('in-view'));
-    requestAnimationFrame(() => anchorTarget.scrollIntoView());
-  }
-};
-
-startSite().catch((error) => {
-  console.error('The JSON page could not be loaded.', error);
-  $('#app').textContent = `Unable to load the page: ${error.message}`;
-});
+await loadPageStructure();
+prepareFooterStructure();
+prepareWhatsappButton();
+await loadSiteContent();
+initializeSite();
+}

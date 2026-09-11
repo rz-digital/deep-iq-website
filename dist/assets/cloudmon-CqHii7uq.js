@@ -1,27 +1,10 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Cloudmon unified observability from DeepIQ — see, understand and act across IT, OT, IoT, cloud, applications and AI infrastructure." />
-    <meta name="theme-color" content="#03070d" />
-    <title>Cloudmon Unified Observability | DeepIQ</title>
-    <link rel="icon" type="image/svg+xml" href="./assets/deepiq-logo-Bj7yipsI.svg" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-    <script type="module" crossorigin src="./assets/cloudmon-Er5Gfqta.js"></script>
-    <link rel="modulepreload" crossorigin href="./assets/modulepreload-polyfill-B5Qt9EMX.js">
-    <link rel="stylesheet" crossorigin href="./assets/cloudmon-CyimBafG.css">
-  </head>
-  <body>
-    <a class="skip-link" href="#main-content">Skip to content</a>
+const a={title:"Cloudmon Unified Observability | DeepIQ",description:"Cloudmon unified observability from DeepIQ — see, understand and act across IT, OT, IoT, cloud, applications and AI infrastructure.",theme:"#03070d",body:`<a class="skip-link" href="#main-content">Skip to content</a>
     <div class="reading-progress" aria-hidden="true"><span></span></div>
     <div class="cursor-aura" aria-hidden="true"></div>
 
     <header class="cloud-header" data-header>
-      <a class="deepiq-brand" href="./index.html" aria-label="DeepIQ home">
-        <img src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20610%201000'%20role='img'%20aria-labelledby='title'%3e%3ctitle%20id='title'%3eDeepIQ%20logo%3c/title%3e%3cdefs%3e%3clinearGradient%20id='deepiq-gradient'%20gradientUnits='userSpaceOnUse'%20x1='0'%20y1='0'%20x2='0'%20y2='1000'%3e%3cstop%20offset='0'%20stop-color='%238127ff'/%3e%3cstop%20offset='0.5'%20stop-color='%233b61de'/%3e%3cstop%20offset='1'%20stop-color='%2300c878'/%3e%3c/linearGradient%3e%3c/defs%3e%3cg%20fill='url(%23deepiq-gradient)'%20stroke='url(%23deepiq-gradient)'%20stroke-linecap='round'%3e%3cline%20x1='90'%20y1='250'%20x2='90'%20y2='700'%20stroke-width='28'/%3e%3ccircle%20cx='90'%20cy='250'%20r='58'%20stroke='none'/%3e%3ccircle%20cx='90'%20cy='700'%20r='58'%20stroke='none'/%3e%3cline%20x1='245'%20y1='100'%20x2='245'%20y2='850'%20stroke-width='28'/%3e%3ccircle%20cx='245'%20cy='100'%20r='58'%20stroke='none'/%3e%3ccircle%20cx='245'%20cy='850'%20r='58'%20stroke='none'/%3e%3cline%20x1='395'%20y1='195'%20x2='395'%20y2='930'%20stroke-width='28'/%3e%3ccircle%20cx='395'%20cy='195'%20r='58'%20stroke='none'/%3e%3ccircle%20cx='395'%20cy='930'%20r='58'%20stroke='none'/%3e%3cline%20x1='545'%20y1='315'%20x2='545'%20y2='650'%20stroke-width='28'/%3e%3ccircle%20cx='545'%20cy='315'%20r='58'%20stroke='none'/%3e%3ccircle%20cx='545'%20cy='650'%20r='58'%20stroke='none'/%3e%3c/g%3e%3c/svg%3e" alt="" />
+      <a class="deepiq-brand" href="/" aria-label="DeepIQ home">
+        <img src="/deepiq-logo.svg" alt="" />
         <span>DEEP</span><b>IQ</b>
       </a>
 
@@ -32,7 +15,7 @@
         <a href="#deepiq-advantage">DeepIQ Advantage</a>
       </nav>
 
-      <a class="header-cta" href="./index.html#contact">Talk to DeepIQ <span aria-hidden="true">↗</span></a>
+      <a class="header-cta" href="/#contact">Talk to DeepIQ <span aria-hidden="true">↗</span></a>
       <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="mobile-nav" aria-label="Open navigation">
         <span></span><span></span>
       </button>
@@ -44,9 +27,9 @@
         <a href="#coverage"><span>02</span>Coverage</a>
         <a href="#outcomes"><span>03</span>Outcomes</a>
         <a href="#deepiq-advantage"><span>04</span>DeepIQ Advantage</a>
-        <a href="./index.html#contact"><span>05</span>Talk to DeepIQ</a>
+        <a href="/#contact"><span>05</span>Talk to DeepIQ</a>
       </nav>
-      <a class="mobile-back" href="./index.html">← Back to DeepIQ</a>
+      <a class="mobile-back" href="/">← Back to DeepIQ</a>
     </div>
 
     <main id="main-content" tabindex="-1">
@@ -65,7 +48,7 @@
           <p class="hero-manifesto">Understand anything.<br />Act intelligently.</p>
           <p class="hero-lead">AI-powered unified observability for the modern enterprise.</p>
           <div class="hero-actions">
-            <a class="primary-button" href="./index.html#contact">Explore with DeepIQ <span aria-hidden="true">↗</span></a>
+            <a class="primary-button" href="/#contact">Explore with DeepIQ <span aria-hidden="true">↗</span></a>
             <a class="ghost-button" href="#why">Why observability? <span aria-hidden="true">↓</span></a>
           </div>
         </div>
@@ -272,7 +255,7 @@
           <h2 id="final-heading">From visibility to intelligence.<br /><em>From alerts to action.</em></h2>
           <p>Talk to DeepIQ today and discover what intelligent observability can do for your organisation.</p>
           <div class="final-actions">
-            <a class="primary-button" href="./index.html#contact">Talk to DeepIQ <span aria-hidden="true">↗</span></a>
+            <a class="primary-button" href="/#contact">Talk to DeepIQ <span aria-hidden="true">↗</span></a>
             <a class="official-link" href="https://www.cloudmon.ai/" target="_blank" rel="noopener noreferrer">Visit Cloudmon.ai <span aria-hidden="true">↗</span></a>
           </div>
         </div>
@@ -280,10 +263,7 @@
     </main>
 
     <footer class="cloud-footer">
-      <a class="deepiq-brand footer-brand" href="./index.html"><img src="data:image/svg+xml,%3csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%20610%201000'%20role='img'%20aria-labelledby='title'%3e%3ctitle%20id='title'%3eDeepIQ%20logo%3c/title%3e%3cdefs%3e%3clinearGradient%20id='deepiq-gradient'%20gradientUnits='userSpaceOnUse'%20x1='0'%20y1='0'%20x2='0'%20y2='1000'%3e%3cstop%20offset='0'%20stop-color='%238127ff'/%3e%3cstop%20offset='0.5'%20stop-color='%233b61de'/%3e%3cstop%20offset='1'%20stop-color='%2300c878'/%3e%3c/linearGradient%3e%3c/defs%3e%3cg%20fill='url(%23deepiq-gradient)'%20stroke='url(%23deepiq-gradient)'%20stroke-linecap='round'%3e%3cline%20x1='90'%20y1='250'%20x2='90'%20y2='700'%20stroke-width='28'/%3e%3ccircle%20cx='90'%20cy='250'%20r='58'%20stroke='none'/%3e%3ccircle%20cx='90'%20cy='700'%20r='58'%20stroke='none'/%3e%3cline%20x1='245'%20y1='100'%20x2='245'%20y2='850'%20stroke-width='28'/%3e%3ccircle%20cx='245'%20cy='100'%20r='58'%20stroke='none'/%3e%3ccircle%20cx='245'%20cy='850'%20r='58'%20stroke='none'/%3e%3cline%20x1='395'%20y1='195'%20x2='395'%20y2='930'%20stroke-width='28'/%3e%3ccircle%20cx='395'%20cy='195'%20r='58'%20stroke='none'/%3e%3ccircle%20cx='395'%20cy='930'%20r='58'%20stroke='none'/%3e%3cline%20x1='545'%20y1='315'%20x2='545'%20y2='650'%20stroke-width='28'/%3e%3ccircle%20cx='545'%20cy='315'%20r='58'%20stroke='none'/%3e%3ccircle%20cx='545'%20cy='650'%20r='58'%20stroke='none'/%3e%3c/g%3e%3c/svg%3e" alt="" /><span>DEEP</span><b>IQ</b></a>
+      <a class="deepiq-brand footer-brand" href="/"><img src="/deepiq-logo.svg" alt="" /><span>DEEP</span><b>IQ</b></a>
       <p>Authorised Cloudmon Agent<br />Sri Lanka &amp; the Maldives</p>
       <div><a href="https://www.cloudmon.ai/" target="_blank" rel="noopener noreferrer">cloudmon.ai ↗</a><span>© <b id="year"></b> DeepIQ</span></div>
-    </footer>
-
-  </body>
-</html>
+    </footer>`};export{a as default};

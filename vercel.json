@@ -1,0 +1,43 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "trailingSlash": false,
+  "redirects": [
+    {
+      "source": "/index.html",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/cloudmon.html",
+      "destination": "/cloudmon",
+      "permanent": true
+    },
+    {
+      "source": "/cloudmon/index.html",
+      "destination": "/cloudmon",
+      "permanent": true
+    },
+    {
+      "source": "/miphi.html",
+      "destination": "/miphi",
+      "permanent": true
+    },
+    {
+      "source": "/miphi/index.html",
+      "destination": "/miphi",
+      "permanent": true
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/cloudmon",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/miphi",
+      "destination": "/index.html"
+    }
+  ]
+}

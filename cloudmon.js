@@ -1,3 +1,4 @@
+export default function mount(scope) {
 const $ = (selector, scope = document) => scope.querySelector(selector);
 const $$ = (selector, scope = document) => [...scope.querySelectorAll(selector)];
 
@@ -12,8 +13,8 @@ const syncScrollState = () => {
 };
 
 syncScrollState();
-window.addEventListener('scroll', syncScrollState, { passive: true });
-window.addEventListener('resize', syncScrollState, { passive: true });
+scope.on(window, 'scroll', syncScrollState, { passive: true });
+scope.on(window, 'resize', syncScrollState, { passive: true });
 
 const menuButton = $('.menu-toggle');
 const mobileNav = $('.mobile-nav');
@@ -27,21 +28,21 @@ const setMenuOpen = (open) => {
   document.body.style.overflow = open ? 'hidden' : '';
 };
 
-menuButton?.addEventListener('click', () => setMenuOpen(!mobileNav?.classList.contains('open')));
-$$('.mobile-nav a').forEach((link) => link.addEventListener('click', () => setMenuOpen(false)));
-window.addEventListener('keydown', (event) => {
+scope.on(menuButton, 'click', () => setMenuOpen(!mobileNav?.classList.contains('open')));
+$$('.mobile-nav a').forEach((link) => scope.on(link, 'click', () => setMenuOpen(false)));
+scope.on(window, 'keydown', (event) => {
   if (event.key === 'Escape' && mobileNav?.classList.contains('open')) {
     setMenuOpen(false);
     menuButton?.focus();
   }
 });
-window.addEventListener('resize', () => {
+scope.on(window, 'resize', () => {
   if (window.innerWidth > 1100 && mobileNav?.classList.contains('open')) setMenuOpen(false);
 }, { passive: true });
 
 const revealElements = $$('.reveal');
 if ('IntersectionObserver' in window && !reducedMotion) {
-  const observer = new IntersectionObserver((entries) => {
+  const observer = scope.observe(IntersectionObserver, (entries) => {
     entries.forEach((entry) => {
       if (!entry.isIntersecting) return;
       entry.target.classList.add('in-view');
@@ -55,7 +56,7 @@ if ('IntersectionObserver' in window && !reducedMotion) {
 
 const cursorAura = $('.cursor-aura');
 if (cursorAura && window.matchMedia('(pointer:fine)').matches) {
-  window.addEventListener('pointermove', (event) => {
+  scope.on(window, 'pointermove', (event) => {
     cursorAura.style.opacity = '1';
     cursorAura.style.left = `${event.clientX}px`;
     cursorAura.style.top = `${event.clientY}px`;
@@ -64,7 +65,7 @@ if (cursorAura && window.matchMedia('(pointer:fine)').matches) {
 
 const heroImage = $('[data-parallax]');
 if (heroImage && !reducedMotion) {
-  window.addEventListener('scroll', () => {
+  scope.on(window, 'scroll', () => {
     heroImage.style.transform = `scale(1.035) translateY(${Math.min(window.scrollY * 0.07, 65)}px)`;
   }, { passive: true });
 }
@@ -83,7 +84,7 @@ class TelemetryField {
     this.draw = this.draw.bind(this);
     if (!this.context) return;
     this.resize();
-    window.addEventListener('resize', this.resize);
+    scope.on(window, 'resize', this.resize);
     if (!reducedMotion) this.start();
     else this.draw(true);
   }
@@ -91,13 +92,13 @@ class TelemetryField {
   start() {
     if (!this.context || this.running || reducedMotion) return;
     this.running = true;
-    this.frame = requestAnimationFrame(this.draw);
+    this.frame = scope.requestAnimationFrame(this.draw);
   }
 
   stop() {
     if (!this.running) return;
     this.running = false;
-    cancelAnimationFrame(this.frame);
+    scope.cancelAnimationFrame(this.frame);
   }
 
   resize() {
@@ -152,14 +153,14 @@ class TelemetryField {
       }
     });
 
-    if (!singleFrame && this.running) this.frame = requestAnimationFrame(this.draw);
+    if (!singleFrame && this.running) this.frame = scope.requestAnimationFrame(this.draw);
   }
 }
 
 const heroField = new TelemetryField($('#telemetry-canvas'), { density: 31, maxDistance: 155, speed: 0.15 });
 const ctaField = new TelemetryField($('#cta-canvas'), { density: 24, maxDistance: 135, speed: 0.1 });
 
-document.addEventListener('visibilitychange', () => {
+scope.on(document, 'visibilitychange', () => {
   [heroField, ctaField].forEach((field) => {
     if (!field?.context || reducedMotion) return;
     if (document.hidden) field.stop();
@@ -252,7 +253,7 @@ class CoverageWizardVisualizer {
     this.draw = this.draw.bind(this);
     this.resize = this.resize.bind(this);
     if (!this.context) return;
-    this.resizeObserver = new ResizeObserver(this.resize);
+    this.resizeObserver = scope.observe(ResizeObserver, this.resize);
     this.resizeObserver.observe(canvas);
   }
 
@@ -276,13 +277,13 @@ class CoverageWizardVisualizer {
   start() {
     if (!this.context || this.running) return;
     this.running = true;
-    this.frame = requestAnimationFrame(this.draw);
+    this.frame = scope.requestAnimationFrame(this.draw);
   }
 
   stop() {
     if (!this.running) return;
     this.running = false;
-    cancelAnimationFrame(this.frame);
+    scope.cancelAnimationFrame(this.frame);
   }
 
   resize() {
@@ -301,7 +302,7 @@ class CoverageWizardVisualizer {
   draw() {
     if (!this.running) return;
     this.drawFrame(performance.now() * 0.001);
-    this.frame = requestAnimationFrame(this.draw);
+    this.frame = scope.requestAnimationFrame(this.draw);
   }
 
   drawFrame(time) {
@@ -740,7 +741,7 @@ const openCoverageWizard = (card) => {
   document.body.classList.add('wizard-open');
   coverageVisualizer.open(activeCoverageKey);
 
-  requestAnimationFrame(() => requestAnimationFrame(() => {
+  scope.requestAnimationFrame(() => scope.requestAnimationFrame(() => {
     const targetRect = wizardSelectedCard.getBoundingClientRect();
     if (!reducedMotion && typeof wizardSelectedCard.animate === 'function' && targetRect.width && targetRect.height) {
       wizardSelectedCard.animate([
@@ -759,10 +760,10 @@ const closeCoverageWizard = () => {
   if (coverageWizard?.open) coverageWizard.close();
 };
 
-coverageCards.forEach((card) => card.addEventListener('click', () => openCoverageWizard(card)));
+coverageCards.forEach((card) => scope.on(card, 'click', () => openCoverageWizard(card)));
 wizardStepButtons.forEach((button) => {
-  button.addEventListener('click', () => renderCoverageWizardStep(Number(button.dataset.wizardStep)));
-  button.addEventListener('keydown', (event) => {
+  scope.on(button, 'click', () => renderCoverageWizardStep(Number(button.dataset.wizardStep)));
+  scope.on(button, 'keydown', (event) => {
     if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
     event.preventDefault();
     const direction = event.key === 'ArrowRight' ? 1 : -1;
@@ -771,16 +772,16 @@ wizardStepButtons.forEach((button) => {
     wizardStepButtons[nextStep].focus();
   });
 });
-wizardPrevious?.addEventListener('click', () => renderCoverageWizardStep(Math.max(0, activeWizardStep - 1)));
-wizardNext?.addEventListener('click', () => {
+scope.on(wizardPrevious, 'click', () => renderCoverageWizardStep(Math.max(0, activeWizardStep - 1)));
+scope.on(wizardNext, 'click', () => {
   if (activeWizardStep === coverageWizardSteps.length - 1) closeCoverageWizard();
   else renderCoverageWizardStep(activeWizardStep + 1);
 });
-$('[data-wizard-close]', coverageWizard)?.addEventListener('click', closeCoverageWizard);
-coverageWizard?.addEventListener('click', (event) => {
+scope.on($('[data-wizard-close]', coverageWizard), 'click', closeCoverageWizard);
+scope.on(coverageWizard, 'click', (event) => {
   if (event.target === coverageWizard) closeCoverageWizard();
 });
-coverageWizard?.addEventListener('close', () => {
+scope.on(coverageWizard, 'close', () => {
   document.body.classList.remove('wizard-open');
   coverageVisualizer.close();
   activeCoverageCard?.classList.remove('is-wizard-source');
@@ -788,8 +789,9 @@ coverageWizard?.addEventListener('close', () => {
   activeCoverageCard = null;
   returnTarget?.focus({ preventScroll:true });
 });
-coverageWizard?.addEventListener('cancel', () => {
+scope.on(coverageWizard, 'cancel', () => {
   document.body.classList.remove('wizard-open');
 });
 
 $('#year')?.replaceChildren(String(new Date().getFullYear()));
+}

@@ -1,3 +1,4 @@
+export default function mount(scope) {
 const $ = (selector, scope = document) => scope.querySelector(selector);
 const $$ = (selector, scope = document) => [...scope.querySelectorAll(selector)];
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -10,7 +11,7 @@ const syncScrollState = () => {
   if (progress) progress.style.width = `${scrollable > 0 ? Math.min(100, window.scrollY / scrollable * 100) : 0}%`;
 };
 syncScrollState();
-window.addEventListener('scroll', syncScrollState, { passive: true });
+scope.on(window, 'scroll', syncScrollState, { passive: true });
 
 const menuButton = $('.menu-toggle');
 const mobileNav = $('.mobile-nav');
@@ -22,13 +23,13 @@ const setMenuOpen = (open) => {
   mobileNav?.setAttribute('aria-hidden', String(!open));
   document.body.style.overflow = open ? 'hidden' : '';
 };
-menuButton?.addEventListener('click', () => setMenuOpen(!mobileNav?.classList.contains('open')));
-$$('.mobile-nav a').forEach((link) => link.addEventListener('click', () => setMenuOpen(false)));
-window.addEventListener('keydown', (event) => { if (event.key === 'Escape') setMenuOpen(false); });
+scope.on(menuButton, 'click', () => setMenuOpen(!mobileNav?.classList.contains('open')));
+$$('.mobile-nav a').forEach((link) => scope.on(link, 'click', () => setMenuOpen(false)));
+scope.on(window, 'keydown', (event) => { if (event.key === 'Escape') setMenuOpen(false); });
 
 const revealElements = $$('.reveal');
 if ('IntersectionObserver' in window && !reducedMotion) {
-  const observer = new IntersectionObserver((entries) => {
+  const observer = scope.observe(IntersectionObserver, (entries) => {
     entries.forEach((entry) => {
       if (!entry.isIntersecting) return;
       entry.target.classList.add('in-view');
@@ -42,7 +43,7 @@ if ('IntersectionObserver' in window && !reducedMotion) {
 
 const cursorAura = $('.cursor-aura');
 if (cursorAura && window.matchMedia('(pointer:fine)').matches) {
-  window.addEventListener('pointermove', (event) => {
+  scope.on(window, 'pointermove', (event) => {
     cursorAura.style.opacity = '1';
     cursorAura.style.left = `${event.clientX}px`;
     cursorAura.style.top = `${event.clientY}px`;
@@ -51,7 +52,7 @@ if (cursorAura && window.matchMedia('(pointer:fine)').matches) {
 
 const heroImage = $('[data-parallax]');
 if (heroImage && !reducedMotion) {
-  window.addEventListener('scroll', () => {
+  scope.on(window, 'scroll', () => {
     heroImage.style.transform = `scale(1.035) translateY(${Math.min(window.scrollY * .07, 65)}px)`;
   }, { passive:true });
 }
@@ -67,9 +68,9 @@ class DataStream {
     this.draw = this.draw.bind(this);
     if (!this.context) return;
     this.resize();
-    window.addEventListener('resize', this.resize);
+    scope.on(window, 'resize', this.resize);
     if (reducedMotion) this.draw(true);
-    else this.frame = requestAnimationFrame(this.draw);
+    else this.frame = scope.requestAnimationFrame(this.draw);
   }
 
   resize() {
@@ -110,7 +111,7 @@ class DataStream {
     context.clearRect(0, 0, this.width, this.height);
     if (this.mode === 'streaks') {
       this.items.forEach((item, index) => {
-        if (!singleFrame) item.x += item.speed;
+        if (singleFrame !== true) item.x += item.speed;
         const gradient = context.createLinearGradient(item.x, 0, item.x + item.length, 0);
         const color = item.warm ? '46,156,255' : '53,216,255';
         gradient.addColorStop(0, `rgba(${color},0)`);
@@ -126,7 +127,7 @@ class DataStream {
     } else {
       const time = performance.now() * .001;
       this.items.forEach((item, index) => {
-        if (!singleFrame) {
+        if (singleFrame !== true) {
           item.x += item.vx;
           item.y += item.vy;
           if (item.x < 0 || item.x > this.width) item.vx *= -1;
@@ -150,18 +151,19 @@ class DataStream {
         }
       });
     }
-    if (!singleFrame) this.frame = requestAnimationFrame(this.draw);
+    if (singleFrame !== true) this.frame = scope.requestAnimationFrame(this.draw);
   }
 }
 
 const heroStream = new DataStream($('#data-stream-canvas'), 'streaks');
 const memoryField = new DataStream($('#memory-canvas'), 'network');
-document.addEventListener('visibilitychange', () => {
+scope.on(document, 'visibilitychange', () => {
   [heroStream, memoryField].forEach((field) => {
     if (!field?.context || reducedMotion) return;
-    if (document.hidden) cancelAnimationFrame(field.frame);
-    else field.frame = requestAnimationFrame(field.draw);
+    if (document.hidden) scope.cancelAnimationFrame(field.frame);
+    else field.frame = scope.requestAnimationFrame(field.draw);
   });
 });
 
 $('#year').textContent = new Date().getFullYear();
+}
