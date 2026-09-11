@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://deepiq.lk/schemas/site-content.schema.json",
+  "title": "DeepIQ editable site content",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["meta", "text", "html", "attributes", "form"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["title", "description"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1, "maxLength": 100 },
+        "description": { "type": "string", "minLength": 1, "maxLength": 200 }
+      }
+    },
+    "text": { "$ref": "#/definitions/selectorMap" },
+    "html": { "$ref": "#/definitions/selectorMap" },
+    "attributes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["selector", "name", "value"],
+        "properties": {
+          "selector": { "type": "string", "minLength": 1 },
+          "name": {
+            "type": "string",
+            "enum": ["href", "target", "rel", "aria-label", "action", "method", "enctype"]
+          },
+          "value": { "type": "string" }
+        }
+      }
+    },
+    "form": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["submittingLabel", "successLabel", "successMessage"],
+      "properties": {
+        "submittingLabel": { "type": "string", "minLength": 1 },
+        "successLabel": { "type": "string", "minLength": 1 },
+        "successMessage": { "type": "string", "minLength": 1 }
+      }
+    }
+  },
+  "definitions": {
+    "selectorMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": { "type": "string" }
+    }
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://deepiq.lk/schemas/page.schema.json",
+  "title": "DeepIQ page structure",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["body"],
+  "properties": {
+    "body": {
+      "type": "string",
+      "minLength": 1
+    }
+  }
+}

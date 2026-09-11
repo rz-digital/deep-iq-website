@@ -1,25 +1,65 @@
 # DeepIQ website
 
-The site uses one HTML entry and a browser-history router. Navigation between home, Cloudmon and MiPhi happens in the current document, without a page reload.
+DeepIQ is a Vite-powered single-page marketing site. Home, Cloudmon, and MiPhi share one HTML entry and use clean browser-history routes without hash fragments or page reloads.
+
+## Local development
+
+```bash
+npm install
+npm run dev
+```
+
+Useful production checks:
+
+```bash
+npm run quality
+npm run build
+npm run preview
+```
+
+`npm run quality` runs ESLint, checked JavaScript, JSON schema validation, and the Prettier check. A build also regenerates route/SEO artifacts and validates editable content before Vite starts.
 
 ## Routes
 
-- `/` — home, with section links such as `/#contact`.
-- `/cloudmon` — Cloudmon view.
-- `/miphi` — MiPhi view.
+- `/`, `/story`, `/solutions`, `/services`, `/contact` - home sections
+- `/cloudmon`, `/cloudmon/why`, `/cloudmon/coverage`, `/cloudmon/outcomes`, `/cloudmon/deepiq-advantage` - Cloudmon
+- `/miphi`, `/miphi/foundation`, `/miphi/workloads`, `/miphi/engineering`, `/miphi/sri-lanka` - MiPhi
 
-Old `.html`, nested `index.html`, and trailing-slash URLs redirect to these canonical addresses. Query strings and fragments are preserved. The root `index.html` is the application's required entry file; it is never a public navigation destination.
+`routes.config.js` is the single source of truth for route paths, legacy aliases, page titles, descriptions, and sitemap priorities. After changing it, run:
 
-## Development
+```bash
+npm run routes:generate
+```
 
-Run `npm run dev`, `npm run build`, or `npm run preview`. Vite serves the shared entry for both solution routes and redirects legacy addresses.
+That command generates Netlify rules in `public/_redirects`, Vercel rules in `vercel.json`, `public/sitemap.xml`, and `public/robots.txt`. Do not edit those generated files independently.
 
-`router.js` owns navigation, Back/Forward, per-view styles and scroll restoration. `route-lifecycle.js` removes event listeners, timers, animation frames and observers when leaving a view. Solution content is in `views/`; homepage content remains editable in `public/page.json` and `public/site-content.json`.
+Old hashes, `.html` addresses, nested `index.html` addresses, and trailing slashes are upgraded or redirected to canonical clean URLs. Query strings are preserved. The root `index.html` remains the application entry file but is never used as a public navigation URL.
+
+## Content and images
+
+Homepage structure and copy live in `public/page.json` and `public/site-content.json`. Their schemas live in `schemas/`; runtime and build-time validation reject malformed content and executable markup.
+
+Optimized hero images are committed under `public/images/heroes/` as responsive AVIF and WebP variants. Original high-resolution PNGs are intentionally excluded from Git. To regenerate the variants, place the three source PNGs in the ignored `source-images/` directory and run:
+
+```bash
+npm run images:optimize
+```
+
+## Analytics and error monitoring
+
+Copy `.env.example` to `.env.local` and configure the services used by the deployment:
+
+- `VITE_ANALYTICS_ENDPOINT` accepts JSON page-view and conversion events.
+- `VITE_ERROR_MONITORING_ENDPOINT` accepts JSON browser error reports.
+- `VITE_SENTRY_DSN` enables Sentry browser monitoring.
+- `VITE_APP_ENVIRONMENT` and `VITE_APP_RELEASE` label reports.
+
+Analytics respects the browser's Do Not Track setting. Error monitoring excludes default personal data. Contact forms, newsletter submissions, email links, and WhatsApp links emit conversion-intent events when an analytics endpoint is configured.
 
 ## Hosting
 
-Publish `dist` after `npm run build`. Deploy at the domain root. Netlify and Vercel configuration is included. On another host, internally rewrite `/cloudmon` and `/miphi` to `/index.html` while preserving the requested URL. Copy the legacy redirects from `public/_redirects`. Serve missing assets and other unknown server paths with HTTP 404.
+Run `npm run build` and publish the generated `dist/` directory at the domain root. Netlify and Vercel configuration is included. For another host, rewrite every clean application route to `/index.html`, preserve the requested browser URL, and return a real 404 for unknown files and paths.
 
-Only one application HTML entry is built; do not upload old product directories from previous builds. Use a clean or atomic deployment of the current `dist` folder.
+`dist/`, logs, local environment files, and original source images are ignored and must not be committed. Use a clean or atomic deployment of the current build output.
 
-Contact and newsletter forms currently open the visitor's email application. A server-backed form delivery service has not been configured.
+SEO defaults include canonical metadata, Open Graph/Twitter metadata, Organization and WebSite JSON-LD, `robots.txt`, and a route-derived sitemap.

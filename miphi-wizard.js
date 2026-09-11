@@ -648,6 +648,7 @@ const workloadWizardProgress = select('[data-workload-wizard-progress]', workloa
 const workloadWizardSelectedCard = select('[data-workload-wizard-selected]', workloadWizard);
 const workloadWizardStage = select('[data-workload-wizard-stage]', workloadWizard);
 const workloadWizardDetail = select('.workload-wizard-detail-grid', workloadWizard);
+/** @type {HTMLElement | null} */
 let activeWorkloadCard = null;
 let activeWorkloadKey = 'ai';
 let activeWorkloadStep = 0;

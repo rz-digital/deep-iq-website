@@ -2,12 +2,33 @@
   "name": "deepiq-website",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
+    "routes:generate": "node scripts/generate-routes.mjs",
+    "content:validate": "node scripts/validate-content.mjs",
+    "images:optimize": "node scripts/optimize-images.mjs",
+    "lint": "eslint .",
+    "typecheck": "tsc -p jsconfig.json",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "quality": "npm run lint && npm run typecheck && npm run content:validate && npm run format:check",
+    "predev": "npm run routes:generate && npm run content:validate",
     "dev": "vite",
+    "prebuild": "npm run routes:generate && npm run content:validate",
     "build": "vite build",
     "preview": "vite preview"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "ajv": "^8.20.0",
+    "eslint": "^10.10.0",
+    "globals": "^17.12.0",
+    "prettier": "^3.9.6",
+    "sharp": "^0.35.4",
+    "typescript": "^7.0.2",
     "vite": "^7.1.1"
+  },
+  "dependencies": {
+    "@sentry/browser": "^10.74.0"
   }
 }

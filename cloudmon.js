@@ -687,6 +687,7 @@ const wizardPrevious = $('[data-wizard-prev]', coverageWizard);
 const wizardNext = $('[data-wizard-next]', coverageWizard);
 const wizardProgress = $('[data-wizard-progress]', coverageWizard);
 const wizardSelectedCard = $('[data-wizard-selected]', coverageWizard);
+/** @type {HTMLElement | null} */
 let activeCoverageCard = null;
 let activeCoverageKey = 'infrastructure';
 let activeWizardStep = 0;

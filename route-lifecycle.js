@@ -5,7 +5,9 @@ export function createRouteLifecycle() {
   const timers = new Set();
   const observers = new Set();
   const scope = {
-    get signal() { return controller.signal; },
+    get signal() {
+      return controller.signal;
+    },
     on(target, type, callback, options = {}) {
       target?.addEventListener(type, callback, {
         ...(typeof options === 'boolean' ? { capture: options } : options),

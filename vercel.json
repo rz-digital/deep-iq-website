@@ -32,11 +32,59 @@
   ],
   "rewrites": [
     {
+      "source": "/story",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/solutions",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/services",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/contact",
+      "destination": "/index.html"
+    },
+    {
       "source": "/cloudmon",
       "destination": "/index.html"
     },
     {
+      "source": "/cloudmon/why",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/cloudmon/coverage",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/cloudmon/outcomes",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/cloudmon/deepiq-advantage",
+      "destination": "/index.html"
+    },
+    {
       "source": "/miphi",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/miphi/foundation",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/miphi/workloads",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/miphi/engineering",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/miphi/sri-lanka",
       "destination": "/index.html"
     }
   ]
