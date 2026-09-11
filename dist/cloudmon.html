@@ -10,9 +10,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
-    <script type="module" crossorigin src="./assets/cloudmon-r5hJEkDj.js"></script>
+    <script type="module" crossorigin src="./assets/cloudmon-Er5Gfqta.js"></script>
     <link rel="modulepreload" crossorigin href="./assets/modulepreload-polyfill-B5Qt9EMX.js">
-    <link rel="stylesheet" crossorigin href="./assets/cloudmon-_VLSR5cC.css">
+    <link rel="stylesheet" crossorigin href="./assets/cloudmon-CyimBafG.css">
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to content</a>
@@ -127,16 +127,81 @@
             <div><small>UNIFIED</small><strong>CLOUDMON</strong><small>INTELLIGENCE</small></div>
           </div>
           <div class="coverage-grid">
-            <article class="coverage-card"><span class="coverage-number">01</span><div class="coverage-motion motion-infrastructure" aria-hidden="true"><span></span><span></span><span></span><i></i></div><div class="coverage-icon" aria-hidden="true">▦</div><h3>IT Infrastructure<br />&amp; Data Centres</h3><p>Core compute, storage and endpoint health in one operational view.</p></article>
-            <article class="coverage-card"><span class="coverage-number">02</span><div class="coverage-motion motion-network" aria-hidden="true"><span></span><span></span><span></span><i></i></div><div class="coverage-icon" aria-hidden="true">⌁</div><h3>Networks<br />&amp; SD-WAN</h3><p>Connectivity, traffic and service quality across distributed networks.</p></article>
-            <article class="coverage-card"><span class="coverage-number">03</span><div class="coverage-motion motion-cloud" aria-hidden="true"><span></span><span></span><span></span><i></i></div><div class="coverage-icon" aria-hidden="true">☁</div><h3>Hybrid<br />&amp; Multi-Cloud</h3><p>Consistent insight across on-premise, AWS and Microsoft Azure.</p></article>
-            <article class="coverage-card"><span class="coverage-number">04</span><div class="coverage-motion motion-applications" aria-hidden="true"><span></span><span></span><span></span><i></i></div><div class="coverage-icon" aria-hidden="true">◇</div><h3>Applications<br />&amp; Services</h3><p>Performance and availability mapped to real user and business impact.</p></article>
-            <article class="coverage-card"><span class="coverage-number">05</span><div class="coverage-motion motion-industrial" aria-hidden="true"><span></span><span></span><span></span><i></i></div><div class="coverage-icon" aria-hidden="true">⚙</div><h3>OT &amp;<br />Industrial Systems</h3><p>Operational technology observed alongside the wider enterprise.</p></article>
-            <article class="coverage-card"><span class="coverage-number">06</span><div class="coverage-motion motion-iot" aria-hidden="true"><span></span><span></span><span></span><i></i></div><div class="coverage-icon" aria-hidden="true">⌁</div><h3>IoT &amp;<br />Edge Devices</h3><p>Connected-device intelligence at scale, from edge to core.</p></article>
-            <article class="coverage-card"><span class="coverage-number">07</span><div class="coverage-motion motion-ai" aria-hidden="true"><span></span><span></span><span></span><i></i></div><div class="coverage-icon" aria-hidden="true">✦</div><h3>AI &amp; GPU<br />Infrastructure</h3><p>Demanding AI workloads made measurable, visible and manageable.</p></article>
+            <button class="coverage-card" type="button" data-coverage-key="infrastructure" aria-haspopup="dialog" aria-controls="coverage-wizard"><span class="coverage-number">01</span><div class="coverage-motion motion-infrastructure" aria-hidden="true"><span></span><span></span><span></span><i></i></div><div class="coverage-icon" aria-hidden="true">▦</div><h3>IT Infrastructure<br />&amp; Data Centres</h3><p>Core compute, storage and endpoint health in one operational view.</p></button>
+            <button class="coverage-card" type="button" data-coverage-key="network" aria-haspopup="dialog" aria-controls="coverage-wizard"><span class="coverage-number">02</span><div class="coverage-motion motion-network" aria-hidden="true"><span></span><span></span><span></span><i></i></div><div class="coverage-icon" aria-hidden="true">⌁</div><h3>Networks<br />&amp; SD-WAN</h3><p>Connectivity, traffic and service quality across distributed networks.</p></button>
+            <button class="coverage-card" type="button" data-coverage-key="cloud" aria-haspopup="dialog" aria-controls="coverage-wizard"><span class="coverage-number">03</span><div class="coverage-motion motion-cloud" aria-hidden="true"><span></span><span></span><span></span><i></i></div><div class="coverage-icon" aria-hidden="true">☁</div><h3>Hybrid<br />&amp; Multi-Cloud</h3><p>Consistent insight across on-premise, AWS and Microsoft Azure.</p></button>
+            <button class="coverage-card" type="button" data-coverage-key="applications" aria-haspopup="dialog" aria-controls="coverage-wizard"><span class="coverage-number">04</span><div class="coverage-motion motion-applications" aria-hidden="true"><span></span><span></span><span></span><i></i></div><div class="coverage-icon" aria-hidden="true">◇</div><h3>Applications<br />&amp; Services</h3><p>Performance and availability mapped to real user and business impact.</p></button>
+            <button class="coverage-card" type="button" data-coverage-key="industrial" aria-haspopup="dialog" aria-controls="coverage-wizard"><span class="coverage-number">05</span><div class="coverage-motion motion-industrial" aria-hidden="true"><span></span><span></span><span></span><i></i></div><div class="coverage-icon" aria-hidden="true">⚙</div><h3>OT &amp;<br />Industrial Systems</h3><p>Operational technology observed alongside the wider enterprise.</p></button>
+            <button class="coverage-card" type="button" data-coverage-key="iot" aria-haspopup="dialog" aria-controls="coverage-wizard"><span class="coverage-number">06</span><div class="coverage-motion motion-iot" aria-hidden="true"><span></span><span></span><span></span><i></i></div><div class="coverage-icon" aria-hidden="true">⌁</div><h3>IoT &amp;<br />Edge Devices</h3><p>Connected-device intelligence at scale, from edge to core.</p></button>
+            <button class="coverage-card" type="button" data-coverage-key="ai" aria-haspopup="dialog" aria-controls="coverage-wizard"><span class="coverage-number">07</span><div class="coverage-motion motion-ai" aria-hidden="true"><span></span><span></span><span></span><i></i></div><div class="coverage-icon" aria-hidden="true">✦</div><h3>AI &amp; GPU<br />Infrastructure</h3><p>Demanding AI workloads made measurable, visible and manageable.</p></button>
           </div>
         </div>
       </section>
+
+
+      <dialog class="coverage-wizard" id="coverage-wizard" aria-labelledby="coverage-wizard-title">
+        <div class="coverage-wizard-shell">
+          <button class="wizard-close" type="button" data-wizard-close aria-label="Close coverage explorer"><span aria-hidden="true">×</span></button>
+
+          <aside class="wizard-selection">
+            <p class="wizard-overline">Selected coverage</p>
+            <div class="wizard-selected-card" data-wizard-selected>
+              <span class="wizard-selected-number" data-wizard-number>01</span>
+              <div class="wizard-selected-icon" data-wizard-icon aria-hidden="true">▦</div>
+              <h2 id="coverage-wizard-title" tabindex="-1" data-wizard-title>IT Infrastructure &amp; Data Centres</h2>
+              <p data-wizard-summary>Core compute, storage and endpoint health in one operational view.</p>
+            </div>
+            <div class="wizard-source-status"><span><i></i>Cloudmon coverage</span><b>Connected</b></div>
+            <p class="wizard-selection-note">A guided view of how Cloudmon observes, correlates and acts across this environment.</p>
+          </aside>
+
+          <section class="wizard-main" aria-label="Coverage onboarding">
+            <header class="wizard-header">
+              <div aria-live="polite">
+                <p data-wizard-step-label>Step 01 / 03</p>
+                <h3 data-wizard-step-title>Observe the system</h3>
+                <span data-wizard-step-description>Build a live map of the selected environment and its dependencies.</span>
+              </div>
+              <span class="wizard-live"><i></i>Live simulation</span>
+            </header>
+
+            <ol class="wizard-steps" aria-label="Explorer steps">
+              <li><button type="button" class="is-active" data-wizard-step="0" aria-current="step"><span>01</span><b>Observe</b><i></i></button></li>
+              <li><button type="button" data-wizard-step="1"><span>02</span><b>Correlate</b><i></i></button></li>
+              <li><button type="button" data-wizard-step="2"><span>03</span><b>Act</b><i></i></button></li>
+            </ol>
+
+            <div class="wizard-stage" role="img" aria-label="Animated infrastructure topology" data-wizard-stage>
+              <canvas id="coverage-wizard-canvas" aria-hidden="true"></canvas>
+              <div class="wizard-stage-hud"><span>Live topology</span><b data-wizard-scene-label>Infrastructure</b></div>
+              <div class="wizard-stage-legend" aria-hidden="true">
+                <span><i></i><b data-wizard-signal="0">Compute</b></span>
+                <span><i></i><b data-wizard-signal="1">Storage</b></span>
+                <span><i></i><b data-wizard-signal="2">Endpoints</b></span>
+              </div>
+            </div>
+
+            <div class="wizard-detail-grid">
+              <div class="wizard-insight" aria-live="polite">
+                <span>Guided insight</span>
+                <p data-wizard-insight>Cloudmon continuously discovers every active layer and maps how signals move between them.</p>
+                <ul data-wizard-points></ul>
+              </div>
+              <div class="wizard-metrics" aria-label="Live example metrics">
+                <article><span data-wizard-metric-label="0">Assets</span><strong data-wizard-metric-value="0">128</strong><i></i></article>
+                <article><span data-wizard-metric-label="1">Availability</span><strong data-wizard-metric-value="1">99.98%</strong><i></i></article>
+                <article><span data-wizard-metric-label="2">Response</span><strong data-wizard-metric-value="2">14 ms</strong><i></i></article>
+              </div>
+            </div>
+
+            <footer class="wizard-footer">
+              <button type="button" class="wizard-back" data-wizard-prev disabled><span aria-hidden="true">←</span> Back</button>
+              <span data-wizard-progress>1 of 3</span>
+              <button type="button" class="wizard-next" data-wizard-next>Continue <span aria-hidden="true">→</span></button>
+            </footer>
+          </section>
+        </div>
+      </dialog>
 
       <section class="intelligence-section" aria-labelledby="intelligence-heading">
         <div class="intelligence-track" aria-hidden="true">
