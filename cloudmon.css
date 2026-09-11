@@ -31,7 +31,7 @@ section[id] { scroll-margin-top: 82px; }
 .cloud-header.scrolled { height:70px; border-color:var(--line); background:rgba(3,7,13,.82); -webkit-backdrop-filter:blur(20px) saturate(145%); backdrop-filter:blur(20px) saturate(145%); }
 .deepiq-brand { position:relative; display:inline-flex; align-items:center; flex:none; z-index:3; font:500 30px/1 var(--condensed); letter-spacing:-.04em; }
 .deepiq-brand img { width:27px; height:43px; object-fit:contain; margin-right:9px; }
-.deepiq-brand b { color:#2e9cff; font-weight:600; }
+.deepiq-brand b { color:#6252d6; font-weight:600; }
 
 .desktop-nav { display:flex; justify-content:center; align-items:center; gap:clamp(18px,2vw,36px); margin-left:auto; font-size:12px; }
 .desktop-nav a { position:relative; color:#c7d2df; }
@@ -62,7 +62,7 @@ section[id] { scroll-margin-top: 82px; }
 .hero-eyebrow span:first-child { color:var(--cyan); }
 .cloud-hero h1 { max-width:850px; margin:0; font:300 clamp(5rem,min(10.8vw,24svh),12rem)/.74 var(--condensed); letter-spacing:-.05em; text-transform:uppercase; }
 .cloud-hero h1 span { display:block; }
-.word-solid { background:linear-gradient(110deg,#fff 10%,#c6f2ff 52%,#6ae1ff); -webkit-background-clip:text; background-clip:text; color:transparent; opacity:0; transform:translateY(60px); animation:hero-rise 1s .12s cubic-bezier(.16,1,.3,1) forwards; }
+.word-solid { margin-bottom:-.12em; padding-bottom:.12em; background:linear-gradient(110deg,#fff 10%,#c6f2ff 52%,#6ae1ff); -webkit-background-clip:text; background-clip:text; color:transparent; opacity:0; transform:translateY(60px); animation:hero-rise 1s .12s cubic-bezier(.16,1,.3,1) forwards; }
 .word-outline { padding-left:clamp(0px,7vw,105px); color:transparent; -webkit-text-stroke:1px rgba(181,229,255,.75); opacity:0; transform:translateY(60px); animation:hero-rise 1s .25s cubic-bezier(.16,1,.3,1) forwards; }
 @keyframes hero-rise { to { opacity:1; transform:none; } }
 .hero-manifesto { max-width:640px; margin:24px 0 9px clamp(0px,7vw,105px); color:#eaf5ff; font:300 clamp(1.6rem,2.3vw,2.8rem)/1.07 var(--condensed); letter-spacing:.01em; text-transform:uppercase; opacity:0; animation:hero-rise .8s .5s ease forwards; }
@@ -147,6 +147,121 @@ section[id] { scroll-margin-top: 82px; }
 .coverage-card h3 { margin:0 0 14px; font:400 clamp(1.55rem,2vw,2.15rem)/1 var(--condensed); text-transform:uppercase; }
 .coverage-card p { margin:0; color:#8294a6; font-size:.75rem; line-height:1.65; }
 .coverage-card:last-child { grid-column:3 / 5; }
+.coverage-card > :not(.coverage-motion) { position:relative; z-index:2; }
+.coverage-motion { position:absolute; z-index:1; top:22px; right:24px; width:112px; height:74px; overflow:hidden; border:1px solid rgba(53,216,255,.1); background:linear-gradient(145deg,rgba(8,124,255,.055),rgba(3,10,18,.035)); box-shadow:inset 0 0 18px rgba(8,124,255,.035); opacity:0; pointer-events:none; transform:translateY(4px) scale(.97); transition:opacity .25s ease,transform .25s ease,border-color .25s ease; }
+.coverage-motion span,.coverage-motion i { position:absolute; display:block; }
+
+/* Infrastructure: rack units, status LEDs and a diagnostic scan. */
+.motion-infrastructure::before { content:""; position:absolute; inset:7px 8px; border-right:1px solid rgba(53,216,255,.16); border-left:1px solid rgba(53,216,255,.16); }
+.motion-infrastructure span { left:15px; width:82px; height:13px; border:1px solid rgba(53,216,255,.32); background:linear-gradient(90deg,rgba(8,124,255,.17),rgba(53,216,255,.025)); }
+.motion-infrastructure span:nth-child(1) { top:9px; }
+.motion-infrastructure span:nth-child(2) { top:30px; }
+.motion-infrastructure span:nth-child(3) { top:51px; }
+.motion-infrastructure span::before { content:""; position:absolute; top:4px; left:5px; width:3px; height:3px; border-radius:50%; background:var(--cyan); box-shadow:7px 0 0 rgba(53,216,255,.34); }
+.motion-infrastructure span::after { content:""; position:absolute; top:5px; right:6px; width:24px; height:2px; background:rgba(53,216,255,.2); box-shadow:-29px 0 0 rgba(8,124,255,.14); }
+.motion-infrastructure i { left:15px; top:7px; width:82px; height:1px; background:var(--cyan); box-shadow:0 0 7px var(--cyan); }
+
+/* Network: one packet follows a real route between three nodes. */
+.motion-network::before { content:""; position:absolute; inset:9px; background:linear-gradient(134deg,transparent 49%,rgba(53,216,255,.38) 49.5%,rgba(53,216,255,.38) 50.5%,transparent 51%) left/51% 100% no-repeat,linear-gradient(46deg,transparent 49%,rgba(8,124,255,.42) 49.5%,rgba(8,124,255,.42) 50.5%,transparent 51%) right/51% 100% no-repeat; }
+.motion-network span { width:11px; height:11px; border:1px solid rgba(53,216,255,.72); border-radius:50%; background:#071522; box-shadow:0 0 0 3px rgba(53,216,255,.045); }
+.motion-network span::after { content:""; position:absolute; inset:3px; border-radius:50%; background:var(--cyan); opacity:.58; }
+.motion-network span:nth-child(1) { left:7px; top:53px; }
+.motion-network span:nth-child(2) { left:50px; top:7px; }
+.motion-network span:nth-child(3) { right:6px; top:53px; }
+.motion-network i { left:0; top:0; width:6px; height:6px; border-radius:50%; background:var(--cyan); box-shadow:0 0 10px var(--cyan); offset-path:path("M 13 58 L 56 13 L 104 58"); offset-rotate:0deg; }
+
+/* Hybrid cloud: upload and download packets through a cloud layer. */
+.motion-cloud::after { content:""; position:absolute; right:23px; bottom:9px; left:23px; height:1px; background:linear-gradient(90deg,transparent,rgba(53,216,255,.42),transparent); }
+.motion-cloud i { left:32px; top:11px; width:49px; height:21px; border:1px solid rgba(53,216,255,.55); border-radius:20px; background:rgba(7,21,34,.94); }
+.motion-cloud i::before,.motion-cloud i::after { content:""; position:absolute; bottom:9px; border:1px solid rgba(53,216,255,.55); border-bottom:0; border-radius:50% 50% 0 0; background:#071522; }
+.motion-cloud i::before { left:7px; width:17px; height:17px; }
+.motion-cloud i::after { right:7px; width:12px; height:12px; }
+.motion-cloud span { top:40px; width:4px; height:10px; border-radius:1px; background:var(--cyan); box-shadow:0 0 6px rgba(53,216,255,.65); }
+.motion-cloud span:nth-child(1) { left:39px; }
+.motion-cloud span:nth-child(2) { left:55px; background:var(--blue); }
+.motion-cloud span:nth-child(3) { left:71px; }
+
+/* Applications: layered service windows with a health scan. */
+.motion-applications span { width:49px; height:31px; border:1px solid rgba(53,216,255,.36); background:rgba(5,17,29,.94); box-shadow:inset 0 6px 0 rgba(8,124,255,.11); }
+.motion-applications span::before { content:""; position:absolute; top:2px; left:4px; width:2px; height:2px; border-radius:50%; background:var(--cyan); box-shadow:5px 0 0 rgba(53,216,255,.38),10px 0 0 rgba(53,216,255,.2); }
+.motion-applications span::after { content:""; position:absolute; top:12px; right:6px; left:6px; height:1px; background:rgba(53,216,255,.17); box-shadow:0 6px 0 rgba(53,216,255,.1); }
+.motion-applications span:nth-child(1) { left:7px; top:36px; }
+.motion-applications span:nth-child(2) { left:31px; top:21px; }
+.motion-applications span:nth-child(3) { left:55px; top:6px; }
+.motion-applications i { left:13px; top:43px; width:37px; height:1px; background:linear-gradient(90deg,transparent,var(--cyan),transparent); box-shadow:0 0 6px rgba(53,216,255,.65); }
+
+/* Industrial systems: meshed gear teeth with visible hubs. */
+.motion-industrial span { border-radius:50%; background:repeating-conic-gradient(from 0deg,rgba(53,216,255,.72) 0 4deg,transparent 4deg 20deg); }
+.motion-industrial span::before { content:""; position:absolute; inset:4px; border:1px dashed rgba(53,216,255,.46); border-radius:50%; background:#06111d; }
+.motion-industrial span::after { content:""; position:absolute; inset:42%; border-radius:50%; background:var(--cyan); box-shadow:0 0 7px var(--cyan); }
+.motion-industrial span:nth-child(1) { left:8px; top:25px; width:39px; height:39px; }
+.motion-industrial span:nth-child(2) { right:12px; top:7px; width:32px; height:32px; }
+.motion-industrial span:nth-child(3) { right:24px; bottom:5px; width:22px; height:22px; }
+.motion-industrial i { left:42px; top:28px; width:31px; height:18px; border-top:1px solid rgba(8,124,255,.42); border-right:1px solid rgba(8,124,255,.42); transform:skewX(-28deg); }
+
+/* IoT: a compact edge device broadcasting to nearby endpoints. */
+.motion-iot::after { content:""; position:absolute; left:9px; top:12px; width:4px; height:4px; border-radius:50%; background:rgba(53,216,255,.66); box-shadow:87px 9px 0 rgba(53,216,255,.46),9px 45px 0 rgba(53,216,255,.34),77px 49px 0 rgba(53,216,255,.6); }
+.motion-iot span { left:50%; top:50%; border:1px solid rgba(53,216,255,.48); border-radius:50%; opacity:.2; transform:translate(-50%,-50%); }
+.motion-iot span:nth-child(1) { width:28px; height:28px; }
+.motion-iot span:nth-child(2) { width:49px; height:49px; }
+.motion-iot span:nth-child(3) { width:69px; height:69px; }
+.motion-iot i { left:46px; top:27px; width:18px; height:20px; border:1px solid rgba(53,216,255,.68); border-radius:2px; background:rgba(8,124,255,.13); }
+.motion-iot i::before { content:""; position:absolute; left:8px; bottom:100%; width:1px; height:7px; background:var(--cyan); }
+.motion-iot i::after { content:""; position:absolute; left:6px; top:7px; width:4px; height:4px; border-radius:50%; background:var(--cyan); box-shadow:0 0 7px var(--cyan); }
+
+/* AI and GPU: processor cores beneath a controlled scan. */
+.motion-ai::before { content:""; position:absolute; left:22px; top:10px; width:68px; height:54px; border:1px solid rgba(53,216,255,.38); background:linear-gradient(rgba(8,124,255,.055) 1px,transparent 1px),linear-gradient(90deg,rgba(8,124,255,.055) 1px,transparent 1px); background-size:9px 9px; box-shadow:inset 0 0 14px rgba(8,124,255,.08); }
+.motion-ai::after { content:""; position:absolute; left:16px; top:5px; width:80px; height:64px; background:repeating-linear-gradient(90deg,rgba(53,216,255,.42) 0 1px,transparent 1px 9px) top/100% 5px no-repeat,repeating-linear-gradient(90deg,rgba(53,216,255,.32) 0 1px,transparent 1px 9px) bottom/100% 5px no-repeat; opacity:.46; }
+.motion-ai span { width:14px; height:14px; border:1px solid rgba(53,216,255,.48); background:rgba(7,21,34,.92); }
+.motion-ai span:nth-child(1) { left:30px; top:18px; }
+.motion-ai span:nth-child(2) { left:49px; top:30px; }
+.motion-ai span:nth-child(3) { right:29px; top:43px; }
+.motion-ai i { left:23px; top:11px; width:1px; height:52px; background:linear-gradient(transparent,var(--cyan),transparent); box-shadow:0 0 9px var(--cyan); }
+
+@media (hover:hover) and (pointer:fine) {
+  .coverage-card:hover .coverage-motion { border-color:rgba(53,216,255,.2); opacity:1; transform:none; }
+  .coverage-card:hover .motion-infrastructure i { animation:coverage-rack-scan 1.55s ease-in-out infinite; }
+  .coverage-card:hover .motion-infrastructure span::before { animation:coverage-status-led 1.1s ease-in-out infinite alternate; }
+  .coverage-card:hover .motion-infrastructure span:nth-child(2)::before { animation-delay:.18s; }
+  .coverage-card:hover .motion-infrastructure span:nth-child(3)::before { animation-delay:.36s; }
+  .coverage-card:hover .motion-network i { animation:coverage-packet-route 1.8s ease-in-out infinite; }
+  .coverage-card:hover .motion-network span::after { animation:coverage-node-pulse 1.2s ease-in-out infinite alternate; }
+  .coverage-card:hover .motion-network span:nth-child(2)::after { animation-delay:.25s; }
+  .coverage-card:hover .motion-network span:nth-child(3)::after { animation-delay:.5s; }
+  .coverage-card:hover .motion-cloud i { animation:coverage-cloud-breathe 1.8s ease-in-out infinite; }
+  .coverage-card:hover .motion-cloud span:nth-child(1),.coverage-card:hover .motion-cloud span:nth-child(3) { animation:coverage-cloud-down 1.25s ease-in-out infinite; }
+  .coverage-card:hover .motion-cloud span:nth-child(3) { animation-delay:.28s; }
+  .coverage-card:hover .motion-cloud span:nth-child(2) { animation:coverage-cloud-up 1.25s .14s ease-in-out infinite; }
+  .coverage-card:hover .motion-applications span { animation:coverage-app-layer 1.8s ease-in-out infinite alternate; }
+  .coverage-card:hover .motion-applications span:nth-child(2) { animation-delay:.12s; }
+  .coverage-card:hover .motion-applications span:nth-child(3) { animation-delay:.24s; }
+  .coverage-card:hover .motion-applications i { animation:coverage-app-scan 1.45s ease-in-out infinite; }
+  .coverage-card:hover .motion-industrial span:nth-child(1) { animation:ring-spin 5s linear infinite; }
+  .coverage-card:hover .motion-industrial span:nth-child(2) { animation:ring-spin 3.8s linear reverse infinite; }
+  .coverage-card:hover .motion-industrial span:nth-child(3) { animation:ring-spin 2.8s linear infinite; }
+  .coverage-card:hover .motion-iot span { animation:coverage-iot-signal 1.8s ease-out infinite; }
+  .coverage-card:hover .motion-iot span:nth-child(2) { animation-delay:.25s; }
+  .coverage-card:hover .motion-iot span:nth-child(3) { animation-delay:.5s; }
+  .coverage-card:hover .motion-iot i::after { animation:coverage-device-status .85s ease-in-out infinite alternate; }
+  .coverage-card:hover .motion-ai span { animation:coverage-core-load 1.1s ease-in-out infinite alternate; }
+  .coverage-card:hover .motion-ai span:nth-child(2) { animation-delay:.2s; }
+  .coverage-card:hover .motion-ai span:nth-child(3) { animation-delay:.4s; }
+  .coverage-card:hover .motion-ai i { animation:coverage-chip-scan 1.65s ease-in-out infinite; }
+}
+
+@keyframes coverage-rack-scan { 0%,100% { opacity:0; transform:translateY(1px); } 15%,85% { opacity:1; } 50% { transform:translateY(55px); } }
+@keyframes coverage-status-led { to { background:#79ffd0; box-shadow:7px 0 0 var(--cyan),0 0 7px rgba(121,255,208,.65); } }
+@keyframes coverage-packet-route { 0% { opacity:0; offset-distance:0%; } 12%,88% { opacity:1; } 100% { opacity:0; offset-distance:100%; } }
+@keyframes coverage-node-pulse { to { opacity:1; box-shadow:0 0 8px var(--cyan); } }
+@keyframes coverage-cloud-breathe { 50% { transform:translateY(-2px); box-shadow:0 0 13px rgba(53,216,255,.12); } }
+@keyframes coverage-cloud-down { 0% { opacity:0; transform:translateY(-5px); } 25%,70% { opacity:1; } 100% { opacity:0; transform:translateY(13px); } }
+@keyframes coverage-cloud-up { 0% { opacity:0; transform:translateY(13px); } 25%,70% { opacity:1; } 100% { opacity:0; transform:translateY(-5px); } }
+@keyframes coverage-app-layer { to { border-color:rgba(53,216,255,.63); transform:translate(-2px,2px); } }
+@keyframes coverage-app-scan { 0%,100% { opacity:0; transform:translateY(0); } 15%,85% { opacity:1; } 50% { transform:translateY(17px); } }
+@keyframes coverage-iot-signal { 0% { opacity:.52; transform:translate(-50%,-50%) scale(.72); } 100% { opacity:0; transform:translate(-50%,-50%) scale(1.08); } }
+@keyframes coverage-device-status { to { background:#79ffd0; box-shadow:0 0 11px #79ffd0; } }
+@keyframes coverage-core-load { to { border-color:rgba(53,216,255,.9); background:rgba(8,124,255,.38); box-shadow:inset 0 0 7px rgba(53,216,255,.16); } }
+@keyframes coverage-chip-scan { 0%,100% { opacity:0; transform:translateX(0); } 15%,85% { opacity:1; } 50% { transform:translateX(66px); } }
 
 .intelligence-section { overflow:hidden; background:#087cff; }
 .intelligence-track { display:flex; width:max-content; padding:12px 0 16px; border-bottom:1px solid rgba(255,255,255,.26); color:white; animation:marquee 24s linear infinite; }
