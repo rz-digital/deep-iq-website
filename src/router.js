@@ -1,6 +1,7 @@
 import { createRouteLifecycle } from './route-lifecycle.js';
 import { APP_ROUTES, ROUTE_ALIASES, SITE_ORIGIN } from './routes.config.js';
-import { captureException, initializeTelemetry, trackPageView } from './telemetry.js';
+import { captureException, trackPageView } from './telemetry.js';
+import { ensureCookieConsentUI, initCookieConsent } from './cookie-consent.js';
 import homeStyles from './styles.css?url';
 import cloudmonStyles from './cloudmon.css?url';
 import miphiStyles from './miphi.css?url';
@@ -36,6 +37,13 @@ const views = {
       };
     },
   },
+  privacy: {
+    css: homeStyles,
+    load: async () => {
+      const view = await import('./views/privacy.js');
+      return { ...view.default, mount: (await import('./privacy.js')).default };
+    },
+  },
 };
 
 const routes = new Map(APP_ROUTES.map((route) => [route.path, route]));
@@ -51,7 +59,7 @@ let activeScope;
 let renderedView;
 let navigationId = 0;
 history.scrollRestoration = 'manual';
-initializeTelemetry();
+initCookieConsent();
 
 function canonicalUrl(url) {
   const next = new URL(url, location.href);
@@ -195,6 +203,7 @@ async function renderRoute({ restore, focus = true } = {}) {
       renderMessage('Page not found', 'This address does not match a DeepIQ page.');
     }
     if (id !== navigationId) return;
+    ensureCookieConsentUI();
     renderedView = route?.view;
     applyRouteMetadata(route, view);
     scrollToRoute(route?.anchor, restore);
@@ -208,6 +217,7 @@ async function renderRoute({ restore, focus = true } = {}) {
     console.error('Unable to open route:', error);
     captureException(error, { route: url.pathname, source: 'router' });
     renderMessage('Unable to open this page', 'Please refresh the page and try again.');
+    ensureCookieConsentUI();
   }
 }
 

@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "engines": {
+    "node": ">=20.19"
+  },
   "scripts": {
     "routes:generate": "node scripts/generate-routes.mjs",
     "content:validate": "node scripts/validate-content.mjs",
@@ -12,9 +15,10 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "quality": "npm run lint && npm run typecheck && npm run content:validate && npm run format:check",
-    "predev": "npm run routes:generate && npm run content:validate",
+    "verify:content": "npm run routes:generate && npm run content:validate",
+    "predev": "npm run verify:content",
     "dev": "vite",
-    "prebuild": "npm run routes:generate && npm run content:validate",
+    "prebuild": "npm run verify:content",
     "build": "vite build",
     "preview": "vite preview"
   },

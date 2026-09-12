@@ -1,7 +1,7 @@
 // @ts-check
 import Ajv from 'ajv';
-import pageSchema from './schemas/page.schema.json';
-import siteContentSchema from './schemas/site-content.schema.json';
+import pageSchema from '../schemas/page.schema.json';
+import siteContentSchema from '../schemas/site-content.schema.json';
 
 /**
  * @typedef {{ body: string }} PageContent

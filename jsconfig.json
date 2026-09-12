@@ -14,11 +14,14 @@
     "types": ["vite/client"]
   },
   "include": [
-    "router.js",
-    "route-lifecycle.js",
-    "main.js",
-    "telemetry.js",
-    "content-validation.js",
-    "routes.config.js"
+    "src/router.js",
+    "src/route-lifecycle.js",
+    "src/main.js",
+    "src/telemetry.js",
+    "src/content-validation.js",
+    "src/routes.config.js",
+    "src/cookie-consent.js",
+    "src/privacy.js",
+    "src/views/privacy.js"
   ]
 }

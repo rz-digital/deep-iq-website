@@ -1,39 +1,20 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
 /node_modules
-/.pnp
-.pnp.js
 
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
+# production build output
 /dist/
+
+# original, full-resolution hero images (only the optimized public/images/heroes/
+# variants generated from these are committed — see npm run images:optimize)
+/source-images/
 
 # misc
 .DS_Store
-*.pem
-/source-images/
-
-# debug
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
 
 # local env files
 .env*.local
 .env
 
-# vercel
-.vercel
-
 # typescript
 *.tsbuildinfo
-next-env.d.ts

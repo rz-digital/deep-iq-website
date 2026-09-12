@@ -3,7 +3,7 @@
 export const SITE_ORIGIN = 'https://deepiq.lk';
 
 /**
- * @typedef {'home' | 'cloudmon' | 'miphi'} ViewName
+ * @typedef {'home' | 'cloudmon' | 'miphi' | 'privacy'} ViewName
  * @typedef {{
  *   path: string;
  *   view: ViewName;
@@ -142,6 +142,13 @@ export const APP_ROUTES = Object.freeze([
     title: 'MiPhi in Sri Lanka | DeepIQ',
     description: 'Access MiPhi enterprise storage in Sri Lanka through authorised local agent DeepIQ.',
     priority: 0.8,
+  },
+  {
+    path: '/privacy',
+    view: 'privacy',
+    title: 'Privacy Policy | DeepIQ',
+    description: 'How DeepIQ handles data, local storage and optional analytics for deepiq.lk visitors.',
+    priority: 0.3,
   },
 ]);
 

@@ -2,15 +2,17 @@ import js from '@eslint/js';
 import globals from 'globals';
 
 const browserFiles = [
-  'router.js',
-  'route-lifecycle.js',
-  'main.js',
-  'cloudmon.js',
-  'miphi.js',
-  'miphi-wizard.js',
-  'telemetry.js',
-  'content-validation.js',
-  'views/**/*.js',
+  'src/router.js',
+  'src/route-lifecycle.js',
+  'src/main.js',
+  'src/cloudmon.js',
+  'src/miphi.js',
+  'src/miphi-wizard.js',
+  'src/privacy.js',
+  'src/telemetry.js',
+  'src/content-validation.js',
+  'src/cookie-consent.js',
+  'src/views/**/*.js',
 ];
 
 export default [
@@ -32,7 +34,7 @@ export default [
   },
   {
     ...js.configs.recommended,
-    files: ['vite.config.js', 'routes.config.js', 'eslint.config.js', 'scripts/**/*.mjs'],
+    files: ['vite.config.js', 'src/routes.config.js', 'eslint.config.js', 'scripts/**/*.mjs'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',

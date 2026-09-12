@@ -6,6 +6,51 @@ const sentryDsn = import.meta.env.VITE_SENTRY_DSN?.trim();
 const environment = import.meta.env.VITE_APP_ENVIRONMENT?.trim() || import.meta.env.MODE;
 const release = import.meta.env.VITE_APP_RELEASE?.trim() || undefined;
 
+const CONSENT_STORAGE_KEY = 'deepiq-consent';
+const CONSENT_VERSION = 1;
+
+/** @typedef {{ version: number, analytics: boolean, decidedAt: string }} ConsentRecord */
+
+/** @returns {ConsentRecord | null} */
+function readConsentRecord() {
+  try {
+    const raw = localStorage.getItem(CONSENT_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed?.version === CONSENT_VERSION ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+let consentRecord = readConsentRecord();
+
+/** Whether the visitor has made any consent choice yet (accepted or declined). */
+export function hasConsentDecision() {
+  return consentRecord !== null;
+}
+
+/** Whether analytics/error-monitoring delivery is currently permitted. */
+export function hasAnalyticsConsent() {
+  return Boolean(consentRecord?.analytics) && navigator.doNotTrack !== '1';
+}
+
+/**
+ * Records the visitor's choice. Consent lives only in this browser's localStorage — DeepIQ
+ * never sets tracking cookies of its own.
+ * @param {boolean} analytics
+ */
+export function setAnalyticsConsent(analytics) {
+  consentRecord = { version: CONSENT_VERSION, analytics, decidedAt: new Date().toISOString() };
+  try {
+    localStorage.setItem(CONSENT_STORAGE_KEY, JSON.stringify(consentRecord));
+  } catch {
+    // Private browsing or storage disabled: the choice just won't be remembered.
+  }
+  if (analytics) initializeTelemetry();
+  return consentRecord;
+}
+
 let initialized = false;
 let sentry;
 
@@ -37,7 +82,7 @@ const deliver = (endpoint, payload) => {
 };
 
 export function trackEvent(name, properties = {}) {
-  if (navigator.doNotTrack === '1') return;
+  if (!hasAnalyticsConsent()) return;
   deliver(analyticsEndpoint, {
     type: 'event',
     name: safeString(name, 80),
@@ -47,7 +92,7 @@ export function trackEvent(name, properties = {}) {
 }
 
 export function trackPageView(path, title) {
-  if (navigator.doNotTrack === '1') return;
+  if (!hasAnalyticsConsent()) return;
   deliver(analyticsEndpoint, {
     type: 'page_view',
     path,
@@ -58,6 +103,7 @@ export function trackPageView(path, title) {
 }
 
 export function captureException(error, context = {}) {
+  if (!hasAnalyticsConsent()) return;
   const normalized = error instanceof Error ? error : new Error(safeString(error));
   sentry?.captureException(normalized, { extra: context });
   deliver(errorEndpoint, {

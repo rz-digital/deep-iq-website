@@ -1,0 +1,10 @@
+# Normalize line endings to LF regardless of the checkout platform's core.autocrlf setting.
+# Without this, a Windows clone checks files out as CRLF while the committed blobs (and
+# Prettier's default) are LF, making `npm run quality` report every text file as unformatted.
+* text=auto eol=lf
+
+*.png binary
+*.svg binary
+*.avif binary
+*.webp binary
+*.ico binary

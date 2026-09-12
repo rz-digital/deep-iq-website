@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import { APP_ROUTE_PATHS, ROUTE_ALIASES } from './routes.config.js';
+import { APP_ROUTE_PATHS, ROUTE_ALIASES } from './src/routes.config.js';
 
 const aliases = new Map(Object.entries(ROUTE_ALIASES));
 const appRoutes = new Set(APP_ROUTE_PATHS);

@@ -1,8 +1,11 @@
 import { assertPageContent, assertSiteContent } from './content-validation.js';
+import { captureException } from './telemetry.js';
 
 export default async function mount(scope) {
   const $ = (selector, scope = document) => scope.querySelector(selector);
   const $$ = (selector, scope = document) => [...scope.querySelectorAll(selector)];
+
+  let siteContent;
 
   const loadPageStructure = async () => {
     const response = await fetch(`${import.meta.env.BASE_URL}page.json`, { signal: scope.signal });
@@ -13,6 +16,7 @@ export default async function mount(scope) {
   };
 
   const applySiteContent = (content) => {
+    siteContent = content;
     document.title = content.meta.title;
     $('meta[name="description"]')?.setAttribute('content', content.meta.description);
 
@@ -382,6 +386,74 @@ export default async function mount(scope) {
         }
       });
     }
+
+    const formEndpoint = import.meta.env.VITE_FORM_ENDPOINT?.trim();
+
+    const openMailtoFallback = (form, data) => {
+      const action = form.getAttribute('action') || '';
+      const [address, query] = action.replace(/^mailto:/, '').split('?');
+      const subject = new URLSearchParams(query || '').get('subject') || 'Website message';
+      const body = Object.entries(data)
+        .filter(([, value]) => value)
+        .map(([key, value]) => `${key}: ${value}`)
+        .join('\n');
+      window.location.href = `mailto:${address}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    };
+
+    const bindLeadForm = (form) => {
+      if (!form) return;
+      const status =
+        $('.form-status', form) ||
+        (() => {
+          const paragraph = document.createElement('p');
+          paragraph.className = 'form-status';
+          paragraph.setAttribute('role', 'status');
+          paragraph.setAttribute('aria-live', 'polite');
+          form.append(paragraph);
+          return paragraph;
+        })();
+      const submitButton = $('button[type="submit"]', form);
+      const idleLabel = submitButton?.textContent;
+
+      scope.on(form, 'submit', async (event) => {
+        event.preventDefault();
+        if (submitButton?.disabled) return;
+        const data = Object.fromEntries(new FormData(form).entries());
+
+        if (submitButton) {
+          submitButton.disabled = true;
+          submitButton.textContent = siteContent?.form?.submittingLabel || 'SENDING…';
+        }
+        status.hidden = false;
+        status.classList.remove('is-error', 'is-success');
+        status.textContent = '';
+
+        try {
+          if (!formEndpoint) throw new Error('No form delivery endpoint is configured.');
+          const response = await fetch(formEndpoint, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ form: form.id || 'newsletter', fields: data, page: location.pathname }),
+          });
+          if (!response.ok) throw new Error(`Form endpoint responded with ${response.status}`);
+          status.textContent = siteContent?.form?.successMessage || "Thanks — we've received your message.";
+          status.classList.add('is-success');
+          if (submitButton) submitButton.textContent = siteContent?.form?.successLabel || 'SENT';
+          form.reset();
+        } catch (error) {
+          captureException(error, { form: form.id || 'newsletter' });
+          status.textContent = "We couldn't reach our server, so we've opened your email app instead.";
+          status.classList.add('is-error');
+          if (submitButton) submitButton.textContent = idleLabel;
+          openMailtoFallback(form, data);
+        } finally {
+          if (submitButton) submitButton.disabled = false;
+        }
+      });
+    };
+
+    bindLeadForm($('#contact-form'));
+    bindLeadForm($('.newsletter-field'));
 
     $('#year').textContent = new Date().getFullYear();
   };
