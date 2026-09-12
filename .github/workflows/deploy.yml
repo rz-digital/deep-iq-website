@@ -1,0 +1,84 @@
+name: Deploy DeepIQ
+
+# Manual only — pick the branch (default: develop) in the Actions tab and click
+# "Run workflow". Nothing runs automatically on push.
+on:
+  workflow_dispatch:
+    inputs:
+      note:
+        description: 'Optional note for this deploy (shows in the run log)'
+        required: false
+        default: ''
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show deploy note
+        if: ${{ inputs.note != '' }}
+        run: |
+          echo "Deploy note: ${{ inputs.note }}"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.20.2'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        # Also regenerates deploy/nginx-routes.conf and validates page.json /
+        # site-content.json — fails loudly here rather than publishing a broken site.
+        run: npm run build
+        env:
+          VITE_ANALYTICS_ENDPOINT: ${{ secrets.VITE_ANALYTICS_ENDPOINT }}
+          VITE_ERROR_MONITORING_ENDPOINT: ${{ secrets.VITE_ERROR_MONITORING_ENDPOINT }}
+          VITE_FORM_ENDPOINT: ${{ secrets.VITE_FORM_ENDPOINT }}
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
+          VITE_APP_ENVIRONMENT: production
+          VITE_APP_RELEASE: ${{ github.sha }}
+
+      - name: Set release timestamp
+        run: echo "RELEASE=$(date +%Y%m%d%H%M%S)" >> "$GITHUB_ENV"
+
+      - name: Install SSH key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: Pin the VM's host key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H "${{ secrets.DEPLOY_HOST }}" >> ~/.ssh/known_hosts
+
+      - name: Upload build to a new release directory
+        run: |
+          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
+            "mkdir -p /var/www/deepiq/releases/$RELEASE"
+          rsync -avz --delete dist/ \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/var/www/deepiq/releases/$RELEASE/"
+          rsync -avz deploy/nginx-routes.conf \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/var/www/deepiq/nginx-routes.conf"
+
+      - name: Activate release and reload nginx
+        run: |
+          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" bash -s <<EOF
+            set -e
+            ln -sfn /var/www/deepiq/releases/$RELEASE /var/www/deepiq/current
+            cd /var/www/deepiq/releases
+            ls -1t | tail -n +6 | xargs -r rm -rf --
+            sudo /usr/sbin/nginx -t
+            sudo /usr/bin/systemctl reload nginx
+          EOF
+
+      - name: Smoke test
+        run: |
+          sleep 2
+          code=$(curl -s -o /dev/null -w '%{http_code}' https://deepiq.lk/)
+          echo "https://deepiq.lk/ -> $code"
+          test "$code" = "200"
