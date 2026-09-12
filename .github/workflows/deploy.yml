@@ -10,6 +10,9 @@ on:
         required: false
         default: ''
 
+permissions:
+  contents: write   # needed so this workflow can commit + push the version bump
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
@@ -31,6 +34,24 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Bump patch version and tag
+        # Every deploy auto-bumps the patch version (1.0.1 -> 1.0.2, ...) and
+        # publishes it as a commit + tag using this run's own GITHUB_TOKEN — not
+        # your machine's git access, and separate from it entirely.
+        # For a deliberate minor/major bump, run `npm version minor|major`
+        # yourself, commit, and push — the next auto-run continues the patch
+        # count from there.
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          npm version patch --no-git-tag-version
+          NEW_VERSION="v$(node -p "require('./package.json').version")"
+          git commit -am "chore(release): $NEW_VERSION"
+          git tag "$NEW_VERSION"
+          git push origin "HEAD:${{ github.ref_name }}"
+          git push origin "$NEW_VERSION"
+          echo "RELEASE=$NEW_VERSION" >> "$GITHUB_ENV"
+
       - name: Build
         # Also regenerates deploy/nginx-routes.conf and validates page.json /
         # site-content.json — fails loudly here rather than publishing a broken site.
@@ -42,9 +63,6 @@ jobs:
           VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
           VITE_APP_ENVIRONMENT: production
           VITE_APP_RELEASE: ${{ github.sha }}
-
-      - name: Set release timestamp
-        run: echo "RELEASE=$(date +%Y%m%d%H%M%S)" >> "$GITHUB_ENV"
 
       - name: Install SSH key
         uses: webfactory/ssh-agent@v0.9.0
@@ -58,8 +76,15 @@ jobs:
 
       - name: Upload build to a new release directory
         run: |
-          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" \
-            "mkdir -p /var/www/deepiq/releases/$RELEASE"
+          ssh "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}" bash -s <<EOF
+            set -e
+            if [ -d /var/www/deepiq/releases/$RELEASE ]; then
+              echo "Release $RELEASE already exists on the server." >&2
+              echo "Bump the version in package.json (npm version patch/minor/major) and push before deploying again." >&2
+              exit 1
+            fi
+            mkdir -p /var/www/deepiq/releases/$RELEASE
+          EOF
           rsync -avz --delete dist/ \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/var/www/deepiq/releases/$RELEASE/"
           rsync -avz deploy/nginx-routes.conf \
