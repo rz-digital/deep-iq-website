@@ -8,6 +8,7 @@ const browserFiles = [
   'src/cloudmon.js',
   'src/miphi.js',
   'src/miphi-wizard.js',
+  'src/rayan.js',
   'src/privacy.js',
   'src/telemetry.js',
   'src/content-validation.js',
