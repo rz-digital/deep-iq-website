@@ -11,7 +11,7 @@ on:
         default: ''
 
 permissions:
-  contents: write   # needed so this workflow can commit + push the version bump
+  contents: write # needed so this workflow can commit + push the version bump
 
 jobs:
   build-and-deploy:

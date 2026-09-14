@@ -226,6 +226,9 @@ button { color: inherit; font: inherit; }
 .future-inner .lead { max-width: 710px; margin: 35px auto 0; color: #a1b2bf; }
 .future-signature { margin: 33px auto 0; color: #d9e5ec; font: 300 clamp(1.2rem,2vw,2.15rem)/1.3 var(--condensed); letter-spacing: .04em; text-transform: uppercase; }.future-signature span { color: var(--cyan); }
 .future-actions { display: flex; justify-content: center; gap: 27px; margin-top: 37px; }
+.official-link { display: inline-flex; min-width: 190px; align-items: center; justify-content: space-between; gap: 30px; padding: 14px 0; border-bottom: 1px solid rgba(53,216,255,.62); font-size: 9px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; }
+.official-link span { color: var(--cyan); font-size: 15px; transition: transform .25s; }
+.official-link:hover span { transform: translate(3px,-3px); }
 .rayan-footer { display: grid; grid-template-columns: auto 1fr auto auto; align-items: center; gap: clamp(25px,4vw,65px); padding: 42px clamp(24px,4.4vw,84px); border-top: 1px solid var(--line); background: #02070c; }
 .rayan-footer > div { display: grid; gap: 6px; }.rayan-footer > div strong { color: #d3e2eb; font: 400 1rem/1 var(--condensed); letter-spacing: .08em; }.rayan-footer > div span { color: #627989; font-size: 6px; letter-spacing: .15em; }.rayan-footer nav { display: flex; gap: 22px; color: #8194a3; font-size: 9px; }.rayan-footer nav a:hover { color: var(--cyan); }.rayan-footer small { color: #597080; font-size: 7px; }
 
@@ -250,7 +253,7 @@ button { color: inherit; font: inherit; }
   .environment-grid { grid-template-columns: 1fr; }.environment-card { min-height: 500px; }
   .hub-visual { min-height: 720px; }.ecosystem-node { width: 190px; }.central-hub { width: 180px; height: 180px; }.central-hub > div { inset: 42px; }
   .quality-track { font-size: 3.4rem; }.principle { grid-template-columns: 42px 1fr auto; }
-  .future-actions { align-items: center; flex-direction: column; }.future-actions .primary-button,.future-actions .ghost-button { width: min(320px,100%); }
+  .future-actions { align-items: center; flex-direction: column; }.future-actions .primary-button,.future-actions .ghost-button,.future-actions .official-link { width: min(320px,100%); }
   .rayan-footer { grid-template-columns: 1fr; }.rayan-footer > div,.rayan-footer small { justify-self: start; }
 }
 
