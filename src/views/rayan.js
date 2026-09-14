@@ -21,7 +21,7 @@ export default {
         <a href="/rayan/sustainability">Sustainability</a>
         <a href="/rayan/why">Why Rayan</a>
       </nav>
-      <a class="header-cta" href="https://rayan-iot.com/" target="_blank" rel="noopener noreferrer" aria-label="Visit the official Rayan website (opens in a new tab)">Visit Rayan website <span aria-hidden="true">&nearr;</span></a>
+      <a class="header-cta" href="/contact">Explore with DeepIQ <span aria-hidden="true">&nearr;</span></a>
       <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="rayan-mobile-nav" aria-label="Open navigation"><span></span><span></span></button>
     </header>
 
@@ -52,8 +52,8 @@ export default {
           <p class="hero-manifesto">Smarter automation.<br />Connected living.<br /><strong>Sustainable future.</strong></p>
           <p class="hero-lead">Intelligent hardware, connected software and practical automation working together to make every environment more efficient, secure and responsive.</p>
           <div class="hero-actions">
-            <a class="primary-button" href="/rayan/smart-hub">Explore the ecosystem <span aria-hidden="true">&darr;</span></a>
-            <a class="ghost-button" href="/contact">Talk to DeepIQ <span aria-hidden="true">&nearr;</span></a>
+            <a class="primary-button" href="/contact">Explore with DeepIQ <span aria-hidden="true">&nearr;</span></a>
+            <a class="ghost-button" href="/rayan/smart-hub">Discover Rayan <span aria-hidden="true">&darr;</span></a>
           </div>
         </div>
 
@@ -267,8 +267,8 @@ export default {
           <p class="lead reveal">Rayan brings together hardware, software, connectivity and automation to create intelligent environments that work better for people and businesses.</p>
           <p class="future-signature reveal">Connecting Technology. <span>Automating Possibilities.</span> Creating a Smarter Future.</p>
           <div class="future-actions reveal">
-            <a class="primary-button" href="https://rayan-iot.com/" target="_blank" rel="noopener noreferrer" aria-label="Visit the official Rayan website (opens in a new tab)">Visit official website <span aria-hidden="true">&nearr;</span></a>
-            <a class="ghost-button" href="/contact">Explore with DeepIQ <span aria-hidden="true">&nearr;</span></a>
+            <a class="primary-button" href="/contact">Talk to DeepIQ <span aria-hidden="true">&nearr;</span></a>
+            <a class="official-link" href="https://rayan-iot.com/" target="_blank" rel="noopener noreferrer" aria-label="Visit the official Rayan website (opens in a new tab)">Visit Rayan <span aria-hidden="true">&nearr;</span></a>
           </div>
         </div>
       </section>
