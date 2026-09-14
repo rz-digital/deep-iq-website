@@ -5,6 +5,7 @@ import { ensureCookieConsentUI, initCookieConsent } from './cookie-consent.js';
 import homeStyles from './styles.css?url';
 import cloudmonStyles from './cloudmon.css?url';
 import miphiStyles from './miphi.css?url';
+import rayanStyles from './rayan.css?url';
 
 const aliases = new Map(Object.entries(ROUTE_ALIASES));
 
@@ -35,6 +36,13 @@ const views = {
           wizard.default(scope);
         },
       };
+    },
+  },
+  rayan: {
+    css: rayanStyles,
+    load: async () => {
+      const [view, behavior] = await Promise.all([import('./views/rayan.js'), import('./rayan.js')]);
+      return { ...view.default, mount: behavior.default };
     },
   },
   privacy: {

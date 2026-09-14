@@ -17,6 +17,7 @@
     "src/router.js",
     "src/route-lifecycle.js",
     "src/main.js",
+    "src/rayan.js",
     "src/telemetry.js",
     "src/content-validation.js",
     "src/routes.config.js",

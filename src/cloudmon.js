@@ -234,12 +234,6 @@ const coverageWizardData = {
   },
 };
 
-const coverageWizardSteps = [
-  { title: 'Observe the system', description: 'Build a live map of the selected environment and every dependency that matters.' },
-  { title: 'Correlate the signals', description: 'Connect metrics, events, traces and changes to expose meaningful operational patterns.' },
-  { title: 'Act with confidence', description: 'Prioritize impact, isolate likely root cause and reveal the clearest response path.' },
-];
-
 class CoverageWizardVisualizer {
   constructor(canvas) {
     this.canvas = canvas;
@@ -250,6 +244,19 @@ class CoverageWizardVisualizer {
     this.running = false;
     this.width = 0;
     this.height = 0;
+    this.sequenceStart = performance.now() * 0.001;
+    this.pausedAt = 0;
+    this.flowPhase = 0;
+    this.accent = '#35d8ff';
+    this.accentRgb = '53,216,255';
+    this.detailMode = 'overview';
+    this.selectedRack = 0;
+    this.selectedDevice = 0;
+    this.hitRegions = [];
+    this.hoverTarget = '';
+    this.zoomOrigin = null;
+    this.transitionStart = 0;
+    this.elapsedTime = 0;
     this.draw = this.draw.bind(this);
     this.resize = this.resize.bind(this);
     if (!this.context) return;
@@ -259,8 +266,11 @@ class CoverageWizardVisualizer {
 
   open(scene) {
     this.scene = scene;
+    this.resetDetailView();
+    this.sequenceStart = performance.now() * 0.001;
+    this.pausedAt = 0;
     this.resize();
-    if (reducedMotion) this.drawFrame(0.8);
+    if (reducedMotion) this.drawFrame(6.2);
     else this.start();
   }
 
@@ -271,11 +281,96 @@ class CoverageWizardVisualizer {
 
   setStep(step) {
     this.step = step;
-    if (reducedMotion) this.drawFrame(0.8);
+    if (reducedMotion) this.drawFrame(6.2);
+  }
+
+  resetDetailView() {
+    this.detailMode = 'overview';
+    this.selectedRack = 0;
+    this.selectedDevice = 0;
+    this.hitRegions = [];
+    this.hoverTarget = '';
+    this.zoomOrigin = null;
+    this.transitionStart = this.elapsedTime;
+  }
+
+  getDetailMode() {
+    return this.detailMode;
+  }
+
+  backDetail() {
+    if (this.detailMode === 'device') this.detailMode = 'switch';
+    else if (this.detailMode === 'switch') this.detailMode = 'rack';
+    else if (this.detailMode === 'rack') this.detailMode = 'overview';
+    else return false;
+    this.hoverTarget = '';
+    this.transitionStart = this.elapsedTime;
+    this.drawFrame(this.elapsedTime);
+    return true;
+  }
+
+  hitTest(x, y) {
+    return [...this.hitRegions].reverse().find((region) => x >= region.x && x <= region.x + region.width && y >= region.y && y <= region.y + region.height) || null;
+  }
+
+  setHoverTarget(target) {
+    const nextTarget = target?.id || '';
+    if (nextTarget === this.hoverTarget) return;
+    this.hoverTarget = nextTarget;
+    if (!this.running) this.drawFrame(this.elapsedTime);
+  }
+
+  activateAt(x, y) {
+    const target = this.hitTest(x, y);
+    if (!target) return false;
+    return this.activateTarget(target);
+  }
+
+  activateTarget(target) {
+    if (target.type === 'rack') {
+      this.selectedRack = target.index;
+      this.zoomOrigin = { x: target.x, y: target.y, width: target.width, height: target.height };
+      this.detailMode = 'rack';
+    } else if (target.type === 'switch') {
+      this.detailMode = 'switch';
+    } else if (target.type === 'device') {
+      this.selectedDevice = target.index;
+      this.detailMode = 'device';
+    } else {
+      return false;
+    }
+    this.hoverTarget = '';
+    this.transitionStart = this.elapsedTime;
+    this.drawFrame(this.elapsedTime);
+    return true;
+  }
+
+  keyboardTarget(direction = 0) {
+    if (this.detailMode === 'overview') {
+      this.selectedRack = (this.selectedRack + direction + 3) % 3;
+      this.setHoverTarget({ id: 'rack-' + this.selectedRack });
+      return this.hitRegions.find((region) => region.type === 'rack' && region.index === this.selectedRack) || null;
+    }
+    if (this.detailMode === 'rack') return this.hitRegions.find((region) => region.type === 'switch') || null;
+    if (this.detailMode === 'switch') {
+      this.selectedDevice = (this.selectedDevice + direction + 4) % 4;
+      this.setHoverTarget({ id: 'device-' + this.selectedDevice });
+      return this.hitRegions.find((region) => region.type === 'device' && region.index === this.selectedDevice) || null;
+    }
+    return null;
+  }
+
+  restart() {
+    this.sequenceStart = performance.now() * 0.001;
+    this.pausedAt = 0;
+    this.drawFrame(0);
   }
 
   start() {
     if (!this.context || this.running) return;
+    const now = performance.now() * 0.001;
+    if (this.pausedAt) this.sequenceStart += now - this.pausedAt;
+    this.pausedAt = 0;
     this.running = true;
     this.frame = scope.requestAnimationFrame(this.draw);
   }
@@ -283,6 +378,7 @@ class CoverageWizardVisualizer {
   stop() {
     if (!this.running) return;
     this.running = false;
+    this.pausedAt = performance.now() * 0.001;
     scope.cancelAnimationFrame(this.frame);
   }
 
@@ -290,28 +386,43 @@ class CoverageWizardVisualizer {
     if (!this.context) return;
     const rect = this.canvas.getBoundingClientRect();
     if (rect.width < 2 || rect.height < 2) return;
-    const ratio = Math.min(window.devicePixelRatio || 1, 2);
+    const ratio = Math.min(window.devicePixelRatio || 1, 3);
     this.width = rect.width;
     this.height = rect.height;
-    this.canvas.width = Math.floor(rect.width * ratio);
-    this.canvas.height = Math.floor(rect.height * ratio);
-    this.context.setTransform(ratio, 0, 0, ratio, 0, 0);
-    this.drawFrame(reducedMotion ? 0.8 : performance.now() * 0.001);
+    this.canvas.width = Math.max(1, Math.round(rect.width * ratio));
+    this.canvas.height = Math.max(1, Math.round(rect.height * ratio));
+    this.context.setTransform(this.canvas.width / rect.width, 0, 0, this.canvas.height / rect.height, 0, 0);
+    this.context.imageSmoothingEnabled = false;
+    const clock = this.pausedAt || performance.now() * 0.001;
+    this.drawFrame(reducedMotion ? 6.2 : Math.max(0, clock - this.sequenceStart));
   }
 
   draw() {
     if (!this.running) return;
-    this.drawFrame(performance.now() * 0.001);
+    this.drawFrame(performance.now() * 0.001 - this.sequenceStart);
     this.frame = scope.requestAnimationFrame(this.draw);
   }
 
   drawFrame(time) {
     const context = this.context;
     if (!context || !this.width || !this.height) return;
+    this.elapsedTime = time;
+    this.hitRegions = [];
+    const sequence = (time % 16) / 16;
+    this.flowPhase = Math.floor(sequence * 4);
     context.clearRect(0, 0, this.width, this.height);
-    this.accent = this.step === 1 ? '#8127ff' : this.step === 2 ? '#3dffb3' : '#35d8ff';
-    this.accentRgb = this.step === 1 ? '129,39,255' : this.step === 2 ? '61,255,179' : '53,216,255';
+    const accents = [
+      ['#35d8ff', '53,216,255'],
+      ['#8127ff', '129,39,255'],
+      ['#ff9f43', '255,159,67'],
+      ['#3dffb3', '61,255,179'],
+    ];
+    [this.accent, this.accentRgb] = accents[this.flowPhase];
     this.drawBoundary();
+    if (this.scene === 'infrastructure' && this.detailMode !== 'overview') {
+      this.drawInfrastructureDetail(time);
+      return;
+    }
     const drawers = {
       infrastructure: this.drawInfrastructure,
       network: this.drawNetwork,
@@ -321,7 +432,18 @@ class CoverageWizardVisualizer {
       iot: this.drawIot,
       ai: this.drawAi,
     };
+    const fullWidth = this.width;
+    const fullHeight = this.height;
+    const compact = fullWidth < 700;
+    this.width = compact ? fullWidth : fullWidth * 0.39;
+    this.height = compact ? fullHeight * 0.32 : fullHeight;
+    const currentStep = this.step;
+    this.step = 0;
     (drawers[this.scene] || drawers.infrastructure).call(this, time);
+    this.step = currentStep;
+    this.width = fullWidth;
+    this.height = fullHeight;
+    this.drawUnifiedFlow(time, sequence, compact);
   }
 
   drawBoundary() {
@@ -338,8 +460,8 @@ class CoverageWizardVisualizer {
     const context = this.context;
     context.save();
     context.beginPath();
-    context.moveTo(a.x, a.y);
-    context.lineTo(b.x, b.y);
+    context.moveTo(Math.round(a.x) + 0.5, Math.round(a.y) + 0.5);
+    context.lineTo(Math.round(b.x) + 0.5, Math.round(b.y) + 0.5);
     context.strokeStyle = 'rgba(' + this.accentRgb + ',' + alpha + ')';
     context.lineWidth = 1;
     if (dashed) context.setLineDash([5, 7]);
@@ -351,8 +473,8 @@ class CoverageWizardVisualizer {
     const context = this.context;
     context.save();
     context.beginPath();
-    context.moveTo(points[0].x, points[0].y);
-    points.slice(1).forEach((point) => context.lineTo(point.x, point.y));
+    context.moveTo(Math.round(points[0].x) + 0.5, Math.round(points[0].y) + 0.5);
+    points.slice(1).forEach((point) => context.lineTo(Math.round(point.x) + 0.5, Math.round(point.y) + 0.5));
     context.strokeStyle = 'rgba(' + this.accentRgb + ',' + alpha + ')';
     context.lineWidth = 1;
     context.stroke();
@@ -385,7 +507,7 @@ class CoverageWizardVisualizer {
     const point = this.pointOnPath(points, progress % 1);
     const context = this.context;
     context.save();
-    context.shadowBlur = 12;
+    context.shadowBlur = 6;
     context.shadowColor = this.accent;
     context.fillStyle = this.accent;
     context.beginPath();
@@ -432,11 +554,11 @@ class CoverageWizardVisualizer {
   drawLabel(label, x, y, align = 'center') {
     const context = this.context;
     context.save();
-    context.fillStyle = 'rgba(156,188,209,.66)';
-    context.font = '500 7px Inter, Arial, sans-serif';
-    context.letterSpacing = '1px';
+    context.fillStyle = 'rgba(190,216,232,.9)';
+    context.font = '600 8px Inter, Arial, sans-serif';
+    context.letterSpacing = '.75px';
     context.textAlign = align;
-    context.fillText(label, x, y);
+    context.fillText(label, Math.round(x), Math.round(y));
     context.restore();
   }
 
@@ -453,6 +575,757 @@ class CoverageWizardVisualizer {
     context.restore();
   }
 
+  drawColorLine(a, b, color, alpha = 0.3, width = 1, dashed = false) {
+    const context = this.context;
+    context.save();
+    context.beginPath();
+    context.moveTo(Math.round(a.x) + 0.5, Math.round(a.y) + 0.5);
+    context.lineTo(Math.round(b.x) + 0.5, Math.round(b.y) + 0.5);
+    context.strokeStyle = color;
+    context.globalAlpha = alpha;
+    context.lineWidth = width;
+    if (dashed) context.setLineDash([5, 7]);
+    context.stroke();
+    context.restore();
+  }
+
+  drawColorPacket(points, progress, color, radius = 2.7, alpha = 1) {
+    const point = this.pointOnPath(points, ((progress % 1) + 1) % 1);
+    const context = this.context;
+    context.save();
+    context.globalAlpha = alpha;
+    context.shadowBlur = 7;
+    context.shadowColor = color;
+    context.fillStyle = color;
+    context.beginPath();
+    context.arc(point.x, point.y, radius, 0, Math.PI * 2);
+    context.fill();
+    context.restore();
+  }
+
+  bezierPoint(start, controlA, controlB, end, progress) {
+    const remaining = 1 - progress;
+    return {
+      x: remaining ** 3 * start.x + 3 * remaining ** 2 * progress * controlA.x + 3 * remaining * progress ** 2 * controlB.x + progress ** 3 * end.x,
+      y: remaining ** 3 * start.y + 3 * remaining ** 2 * progress * controlA.y + 3 * remaining * progress ** 2 * controlB.y + progress ** 3 * end.y,
+    };
+  }
+
+  drawBezierLine(start, controlA, controlB, end, color, alpha = 0.3, dashed = false) {
+    const context = this.context;
+    context.save();
+    context.beginPath();
+    context.moveTo(start.x, start.y);
+    context.bezierCurveTo(controlA.x, controlA.y, controlB.x, controlB.y, end.x, end.y);
+    context.strokeStyle = color;
+    context.globalAlpha = alpha;
+    context.lineWidth = 1.2;
+    if (dashed) context.setLineDash([6, 8]);
+    context.stroke();
+    context.restore();
+  }
+
+  drawBezierPacket(start, controlA, controlB, end, progress, color, radius = 3) {
+    const point = this.bezierPoint(start, controlA, controlB, end, ((progress % 1) + 1) % 1);
+    const context = this.context;
+    context.save();
+    context.fillStyle = color;
+    context.shadowBlur = 8;
+    context.shadowColor = color;
+    context.beginPath();
+    context.arc(point.x, point.y, radius, 0, Math.PI * 2);
+    context.fill();
+    context.restore();
+  }
+
+  drawFlowTag(x, y, number, label, active, align = 'center') {
+    const context = this.context;
+    context.save();
+    context.textAlign = align;
+    context.font = '600 8px Inter, Arial, sans-serif';
+    context.letterSpacing = '1px';
+    context.fillStyle = active ? this.accent : 'rgba(151,181,199,.72)';
+    context.shadowBlur = active ? 4 : 0;
+    context.shadowColor = this.accent;
+    context.fillText(number + '  ' + label, Math.round(x), Math.round(y));
+    context.restore();
+  }
+
+  drawCorrelationEngine(point, time, activeStrength, compact) {
+    const context = this.context;
+    const radius = compact ? 31 : 39;
+    const orbit = radius + 12;
+    context.save();
+    context.translate(point.x, point.y);
+
+    const glow = context.createRadialGradient(0, 0, 2, 0, 0, orbit + 12);
+    glow.addColorStop(0, 'rgba(129,39,255,.22)');
+    glow.addColorStop(1, 'rgba(129,39,255,0)');
+    context.fillStyle = glow;
+    context.beginPath();
+    context.arc(0, 0, orbit + 12, 0, Math.PI * 2);
+    context.fill();
+
+    context.rotate(time * (0.18 + activeStrength * 0.22));
+    context.strokeStyle = 'rgba(129,39,255,' + (0.26 + activeStrength * 0.42) + ')';
+    context.lineWidth = 1.2;
+    context.setLineDash([7, 8]);
+    context.beginPath();
+    context.arc(0, 0, orbit, 0, Math.PI * 2);
+    context.stroke();
+    context.setLineDash([]);
+
+    for (let index = 0; index < 8; index += 1) {
+      const angle = (Math.PI * 2 * index) / 8 - time * (0.35 + activeStrength * 0.4);
+      const dotOrbit = radius - activeStrength * 8 + (index % 2) * 8;
+      const x = Math.cos(angle) * dotOrbit;
+      const y = Math.sin(angle) * dotOrbit;
+      const color = index % 3 === 0 ? '#35d8ff' : index % 3 === 1 ? '#8127ff' : '#0a7cff';
+      context.fillStyle = color;
+      context.shadowBlur = activeStrength > 0.6 ? 6 : 2;
+      context.shadowColor = color;
+      context.beginPath();
+      context.arc(x, y, index % 3 === 0 ? 2.6 : 1.8, 0, Math.PI * 2);
+      context.fill();
+    }
+
+    context.rotate(-time * (0.18 + activeStrength * 0.22));
+    context.fillStyle = 'rgba(4,13,24,.96)';
+    context.strokeStyle = 'rgba(164,104,255,' + (0.42 + activeStrength * 0.45) + ')';
+    context.lineWidth = 1.2;
+    context.beginPath();
+    for (let side = 0; side < 6; side += 1) {
+      const angle = -Math.PI / 2 + (side * Math.PI) / 3;
+      const x = Math.cos(angle) * radius * 0.58;
+      const y = Math.sin(angle) * radius * 0.58;
+      if (side === 0) context.moveTo(x, y);
+      else context.lineTo(x, y);
+    }
+    context.closePath();
+    context.fill();
+    context.stroke();
+    context.fillStyle = '#b785ff';
+    context.shadowBlur = 6;
+    context.shadowColor = '#8127ff';
+    context.beginPath();
+    context.arc(0, 0, 4 + activeStrength * 2, 0, Math.PI * 2);
+    context.fill();
+    context.restore();
+    this.drawLabel('CONTEXT ENGINE', point.x, point.y + orbit + 17);
+  }
+
+  drawCauseNode(point, time, activeStrength, recovering, compact) {
+    const context = this.context;
+    const radius = compact ? 23 : 29;
+    const color = recovering ? '#3dffb3' : '#ff9f43';
+    context.save();
+    context.translate(point.x, point.y);
+    const pulse = 1 + Math.sin(time * 4) * 0.08 * activeStrength;
+    context.scale(pulse, pulse);
+    context.rotate(Math.PI / 4);
+    context.fillStyle = recovering ? 'rgba(61,255,179,.09)' : 'rgba(255,159,67,.1)';
+    context.strokeStyle = color;
+    context.globalAlpha = 0.45 + activeStrength * 0.5;
+    context.shadowBlur = 8 * activeStrength;
+    context.shadowColor = color;
+    context.fillRect(-radius * 0.7, -radius * 0.7, radius * 1.4, radius * 1.4);
+    context.strokeRect(-radius * 0.7, -radius * 0.7, radius * 1.4, radius * 1.4);
+    context.rotate(-Math.PI / 4);
+    context.globalAlpha = 1;
+    context.fillStyle = color;
+    context.font = '600 15px Inter, Arial, sans-serif';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText(recovering ? '✓' : '!', 0, 1);
+    context.restore();
+
+    if (activeStrength > 0.55) {
+      for (let ring = 0; ring < 3; ring += 1) {
+        const travel = ((time * 0.55 + ring / 3) % 1) * 25;
+        context.save();
+        context.strokeStyle = color;
+        context.globalAlpha = (1 - travel / 25) * 0.28 * activeStrength;
+        context.beginPath();
+        context.arc(point.x, point.y, radius + travel, 0, Math.PI * 2);
+        context.stroke();
+        context.restore();
+      }
+    }
+    this.drawLabel(recovering ? 'CAUSE RECOVERING' : 'LIKELY CAUSE', point.x, point.y + radius + 19);
+  }
+
+  drawImpactCard(point, width, height, label, index, time, activeStrength, recovering) {
+    const context = this.context;
+    const left = point.x - width / 2;
+    const top = point.y - height / 2;
+    const color = recovering ? '#3dffb3' : index === 1 ? '#ff9f43' : '#35d8ff';
+    const highlighted = index === 1 && activeStrength > 0.45;
+    context.save();
+    context.fillStyle = highlighted ? (recovering ? 'rgba(61,255,179,.1)' : 'rgba(255,159,67,.1)') : 'rgba(4,17,29,.92)';
+    context.strokeStyle = color;
+    context.globalAlpha = highlighted ? 0.96 : 0.52;
+    context.fillRect(left, top, width, height);
+    context.strokeRect(left + 0.5, top + 0.5, width - 1, height - 1);
+    context.globalAlpha = 1;
+    context.fillStyle = 'rgba(198,219,231,.9)';
+    context.font = '600 7px Inter, Arial, sans-serif';
+    context.letterSpacing = '.7px';
+    context.textAlign = 'left';
+    context.fillText(label, left + 10, top + 13);
+
+    const barWidth = Math.max(14, width - 20);
+    context.fillStyle = 'rgba(93,128,150,.14)';
+    context.fillRect(left + 10, top + height - 11, barWidth, 2);
+    const value = recovering ? 0.82 : index === 1 ? 0.34 + (Math.sin(time * 2.7) + 1) * 0.08 : 0.68 + index * 0.08;
+    context.fillStyle = color;
+    context.globalAlpha = highlighted ? 0.96 : 0.62;
+    context.fillRect(left + 10, top + height - 11, barWidth * value, 2);
+    context.restore();
+  }
+
+  drawResponseNode(point, time, activeStrength, compact) {
+    const context = this.context;
+    const radius = compact ? 22 : 27;
+    context.save();
+    context.translate(point.x, point.y);
+    context.strokeStyle = 'rgba(61,255,179,' + (0.3 + activeStrength * 0.65) + ')';
+    context.fillStyle = 'rgba(61,255,179,' + (0.035 + activeStrength * 0.08) + ')';
+    context.lineWidth = 1.2;
+    context.shadowBlur = 8 * activeStrength;
+    context.shadowColor = '#3dffb3';
+    context.beginPath();
+    context.arc(0, 0, radius + Math.sin(time * 3) * 2 * activeStrength, 0, Math.PI * 2);
+    context.fill();
+    context.stroke();
+    context.beginPath();
+    context.moveTo(-8, 0);
+    context.lineTo(-2, 7);
+    context.lineTo(10, -8);
+    context.strokeStyle = '#3dffb3';
+    context.globalAlpha = 0.48 + activeStrength * 0.52;
+    context.lineWidth = 2;
+    context.stroke();
+    context.restore();
+    this.drawLabel('GUIDED RESPONSE', point.x, point.y + radius + 17);
+  }
+
+  drawUnifiedFlow(time, sequence, compact) {
+    const context = this.context;
+    const width = this.width;
+    const height = this.height;
+    const phaseProgress = (sequence * 4) % 1;
+    const strength = (phase) => (this.flowPhase === phase ? 0.65 + Math.sin(phaseProgress * Math.PI) * 0.35 : this.flowPhase > phase ? 0.38 : 0.16);
+    const sourceStrength = strength(0);
+    const contextStrength = strength(1);
+    const impactStrength = strength(2);
+    const responseStrength = strength(3);
+    const recovering = this.flowPhase === 3;
+    const colors = ['#35d8ff', '#0a7cff', '#8127ff'];
+
+    const source = compact ? { x: width * 0.5, y: height * 0.3 } : { x: width * 0.37, y: height * 0.5 };
+    const engine = compact ? { x: width * 0.5, y: height * 0.45 } : { x: width * 0.52, y: height * 0.5 };
+    const cause = compact ? { x: width * 0.5, y: height * 0.6 } : { x: width * 0.675, y: height * 0.5 };
+    const response = compact ? { x: width * 0.5, y: height * 0.88 } : { x: width * 0.84, y: height * 0.82 };
+    const impactPoints = compact
+      ? [
+          { x: width * 0.2, y: height * 0.74 },
+          { x: width * 0.5, y: height * 0.74 },
+          { x: width * 0.8, y: height * 0.74 },
+        ]
+      : [
+          { x: width * 0.84, y: height * 0.33 },
+          { x: width * 0.84, y: height * 0.5 },
+          { x: width * 0.84, y: height * 0.67 },
+        ];
+
+    context.save();
+    context.strokeStyle = 'rgba(123,204,255,.055)';
+    context.lineWidth = 1;
+    if (compact) {
+      [0.35, 0.525, 0.665, 0.81].forEach((position) => {
+        context.beginPath();
+        context.moveTo(22, height * position);
+        context.lineTo(width - 22, height * position);
+        context.stroke();
+      });
+    } else {
+      [0.405, 0.6, 0.75].forEach((position) => {
+        context.beginPath();
+        context.moveTo(width * position, 40);
+        context.lineTo(width * position, height - 40);
+        context.stroke();
+      });
+    }
+    context.restore();
+
+    if (this.flowPhase === 0) {
+      const scan = compact ? 45 + phaseProgress * (height * 0.29 - 45) : 32 + phaseProgress * (width * 0.38 - 32);
+      const scanGradient = compact
+        ? context.createLinearGradient(0, scan - 18, 0, scan + 18)
+        : context.createLinearGradient(scan - 18, 0, scan + 18, 0);
+      scanGradient.addColorStop(0, 'rgba(53,216,255,0)');
+      scanGradient.addColorStop(0.5, 'rgba(53,216,255,.13)');
+      scanGradient.addColorStop(1, 'rgba(53,216,255,0)');
+      context.fillStyle = scanGradient;
+      if (compact) context.fillRect(20, scan - 18, width - 40, 36);
+      else context.fillRect(scan - 18, 32, 36, height - 64);
+    }
+
+    const sourceOffsets = [-1, 0, 1];
+    sourceOffsets.forEach((offset, index) => {
+      const start = compact ? { x: source.x + offset * 34, y: source.y } : { x: source.x, y: source.y + offset * 26 };
+      const end = compact ? { x: engine.x + offset * 24, y: engine.y } : { x: engine.x, y: engine.y + offset * 21 };
+      this.drawColorLine(start, end, colors[index], 0.18 + sourceStrength * 0.32, sourceStrength > 0.6 ? 1.4 : 1);
+      for (let packet = 0; packet < 2; packet += 1) {
+        this.drawColorPacket([start, end], time * (0.16 + index * 0.018) + index * 0.23 + packet * 0.5, colors[index], 2.2 + sourceStrength, 0.45 + sourceStrength * 0.5);
+      }
+    });
+
+    this.drawCorrelationEngine(engine, time, contextStrength, compact);
+
+    const correlationOffsets = [-12, 0, 12];
+    correlationOffsets.forEach((offset, index) => {
+      const start = compact ? { x: engine.x + offset, y: engine.y + (compact ? 43 : 0) } : { x: engine.x + 46, y: engine.y + offset };
+      const end = compact ? { x: cause.x + offset * 0.25, y: cause.y - 34 } : { x: cause.x - 39, y: cause.y + offset * 0.25 };
+      this.drawColorLine(start, end, colors[index], 0.12 + contextStrength * 0.28, 1, index !== 1);
+      this.drawColorPacket([start, end], time * 0.21 + index * 0.31, colors[index], 2.1 + contextStrength * 0.8, 0.35 + contextStrength * 0.55);
+    });
+
+    this.drawCauseNode(cause, time, impactStrength, recovering, compact);
+
+    impactPoints.forEach((point, index) => {
+      const causeEdge = compact ? { x: cause.x, y: cause.y + 34 } : { x: cause.x + 36, y: cause.y };
+      const cardEdge = compact ? { x: point.x, y: point.y - 19 } : { x: point.x - width * 0.07, y: point.y };
+      this.drawColorLine(causeEdge, cardEdge, recovering ? '#3dffb3' : '#ff9f43', 0.1 + impactStrength * (index === 1 ? 0.45 : 0.25), index === 1 ? 1.5 : 1);
+      this.drawColorPacket([causeEdge, cardEdge], time * 0.17 + index * 0.26, recovering ? '#3dffb3' : '#ff9f43', index === 1 ? 3 : 2, 0.25 + impactStrength * 0.65);
+    });
+
+    const cardWidth = compact ? Math.min(94, width * 0.25) : Math.min(132, width * 0.13);
+    const cardHeight = compact ? 38 : 40;
+    ['SERVICE', 'USERS', 'SLA'].forEach((label, index) => {
+      this.drawImpactCard(impactPoints[index], cardWidth, cardHeight, label, index, time, impactStrength, recovering);
+    });
+
+    const impactedCenter = impactPoints[1];
+    this.drawColorLine(
+      compact ? { x: impactedCenter.x, y: impactedCenter.y + cardHeight / 2 } : { x: impactedCenter.x, y: impactedCenter.y + cardHeight / 2 },
+      compact ? { x: response.x, y: response.y - 29 } : { x: response.x, y: response.y - 33 },
+      '#3dffb3',
+      0.12 + responseStrength * 0.42,
+      1.2,
+      true,
+    );
+    this.drawResponseNode(response, time, responseStrength, compact);
+
+    const controlA = compact ? { x: width * 0.93, y: height * 0.87 } : { x: width * 0.7, y: height * 0.94 };
+    const controlB = compact ? { x: width * 0.93, y: height * 0.36 } : { x: width * 0.46, y: height * 0.94 };
+    this.drawBezierLine(response, controlA, controlB, source, '#3dffb3', 0.1 + responseStrength * 0.42, true);
+    if (this.flowPhase === 3) {
+      for (let packet = 0; packet < 4; packet += 1) {
+        this.drawBezierPacket(response, controlA, controlB, source, phaseProgress + packet * 0.24, '#3dffb3', 2.4 + packet * 0.15);
+      }
+    }
+
+    if (compact) {
+      this.drawFlowTag(25, engine.y - 46, '01', 'SIGNALS', this.flowPhase === 0, 'left');
+      this.drawFlowTag(25, engine.y - 12, '02', 'CONTEXT', this.flowPhase === 1, 'left');
+      this.drawFlowTag(25, cause.y - 12, '03', 'IMPACT', this.flowPhase === 2, 'left');
+      this.drawFlowTag(25, response.y, '04', 'RESPONSE', this.flowPhase === 3, 'left');
+    } else {
+      this.drawFlowTag(width * 0.2, 53, '01', 'SIGNALS', this.flowPhase === 0);
+      this.drawFlowTag(engine.x, 53, '02', 'CONTEXT', this.flowPhase === 1);
+      this.drawFlowTag(cause.x, 53, '03', 'IMPACT', this.flowPhase === 2);
+      this.drawFlowTag(width * 0.84, 53, '04', 'RESPONSE', this.flowPhase === 3);
+    }
+  }
+
+  transitionProgress(duration = 0.72) {
+    const progress = Math.min(1, Math.max(0, (this.elapsedTime - this.transitionStart) / duration));
+    return 1 - (1 - progress) ** 3;
+  }
+
+  drawDownFlow(start, end, time, color = '#35d8ff', strength = 1) {
+    this.drawColorLine(start, end, color, 0.2 + strength * 0.35, 1.3);
+    for (let packet = 0; packet < 3; packet += 1) {
+      this.drawColorPacket([start, end], time * 0.22 + packet / 3, color, 2.2 + strength * 0.5, 0.45 + strength * 0.45);
+    }
+    const angle = Math.atan2(end.y - start.y, end.x - start.x);
+    const context = this.context;
+    context.save();
+    context.translate(end.x, end.y);
+    context.rotate(angle);
+    context.fillStyle = color;
+    context.globalAlpha = 0.45 + strength * 0.4;
+    context.beginPath();
+    context.moveTo(0, 0);
+    context.lineTo(-8, -4);
+    context.lineTo(-8, 4);
+    context.closePath();
+    context.fill();
+    context.restore();
+  }
+
+  drawTelemetryPath(start, end, time, offset = 0) {
+    this.drawColorLine(start, end, '#8127ff', 0.28, 1, true);
+    this.drawColorPacket([start, end], time * 0.16 + offset, '#b785ff', 2.2, 0.78);
+  }
+
+  drawDevicePanel(x, y, width, height, label, type, time, active = false, hovered = false) {
+    const context = this.context;
+    const color = hovered ? '#3dffb3' : active ? '#35d8ff' : '#4f7891';
+    const protocols = {
+      router: 'SNMP',
+      firewall: 'SNMP',
+      switch: 'SNMP',
+      server: 'AGENT / WMI',
+      storage: 'SNMP / API',
+      management: 'AGENT',
+      probe: 'COLLECTOR',
+    };
+    context.save();
+    context.fillStyle = active || hovered ? 'rgba(7,31,48,.96)' : 'rgba(4,17,29,.94)';
+    context.strokeStyle = color;
+    context.globalAlpha = hovered ? 1 : active ? 0.9 : 0.62;
+    context.shadowBlur = hovered ? 10 : active ? 4 : 0;
+    context.shadowColor = color;
+    context.fillRect(x, y, width, height);
+    context.strokeRect(x + 0.5, y + 0.5, width - 1, height - 1);
+    context.globalAlpha = 1;
+    context.shadowBlur = 0;
+    context.fillStyle = active || hovered ? '#edf8ff' : 'rgba(194,215,228,.88)';
+    context.font = '600 8px Inter, Arial, sans-serif';
+    context.letterSpacing = '.8px';
+    context.textAlign = 'left';
+    context.fillText(label, x + 11, y + 14);
+    context.textAlign = 'right';
+    context.fillStyle = hovered ? '#3dffb3' : 'rgba(147,180,199,.88)';
+    context.font = '600 6px Inter, Arial, sans-serif';
+    context.fillText(protocols[type] || '', x + width - 10, y + 13);
+
+    const iconLeft = x + 12;
+    const iconTop = y + 23;
+    const contentLeft = x + Math.min(48, width * 0.28);
+    const contentWidth = Math.max(24, width - (contentLeft - x) - 12);
+    context.strokeStyle = color;
+    context.fillStyle = color;
+    context.globalAlpha = active || hovered ? 0.92 : 0.58;
+    context.lineWidth = 1;
+
+    if (type === 'router') {
+      const points = [
+        { x: iconLeft + 3, y: iconTop + 9 },
+        { x: iconLeft + 16, y: iconTop + 2 },
+        { x: iconLeft + 16, y: iconTop + 16 },
+        { x: iconLeft + 29, y: iconTop + 9 },
+      ];
+      this.drawColorLine(points[0], points[1], color, 0.55);
+      this.drawColorLine(points[0], points[2], color, 0.55);
+      this.drawColorLine(points[1], points[3], color, 0.55);
+      this.drawColorLine(points[2], points[3], color, 0.55);
+      points.forEach((point) => {
+        context.beginPath();
+        context.arc(point.x, point.y, 2.2, 0, Math.PI * 2);
+        context.fill();
+      });
+    } else if (type === 'firewall') {
+      context.beginPath();
+      context.moveTo(iconLeft + 16, iconTop);
+      context.lineTo(iconLeft + 29, iconTop + 5);
+      context.lineTo(iconLeft + 26, iconTop + 17);
+      context.lineTo(iconLeft + 16, iconTop + 23);
+      context.lineTo(iconLeft + 6, iconTop + 17);
+      context.lineTo(iconLeft + 3, iconTop + 5);
+      context.closePath();
+      context.stroke();
+      context.beginPath();
+      context.moveTo(iconLeft + 10, iconTop + 11);
+      context.lineTo(iconLeft + 15, iconTop + 16);
+      context.lineTo(iconLeft + 23, iconTop + 7);
+      context.stroke();
+    } else if (type === 'switch') {
+      for (let port = 0; port < 12; port += 1) {
+        const column = port % 6;
+        const row = Math.floor(port / 6);
+        const portX = iconLeft + column * 6;
+        const portY = iconTop + row * 8;
+        context.strokeRect(portX + 0.5, portY + 0.5, 4, 4);
+        if ((port + Math.floor(time * 3)) % 5 === 0) context.fillRect(portX + 1, portY + 1, 3, 3);
+      }
+    } else if (type === 'server') {
+      for (let slot = 0; slot < 4; slot += 1) {
+        const slotY = iconTop + slot * 6;
+        context.strokeRect(iconLeft + 0.5, slotY + 0.5, 31, 4);
+        context.fillRect(iconLeft + 3, slotY + 2, 2, 2);
+      }
+    } else if (type === 'storage') {
+      for (let disk = 0; disk < 3; disk += 1) {
+        context.beginPath();
+        context.arc(iconLeft + 6 + disk * 11, iconTop + 10, 4, 0, Math.PI * 2);
+        context.stroke();
+        context.beginPath();
+        context.arc(iconLeft + 6 + disk * 11, iconTop + 10, 1, 0, Math.PI * 2);
+        context.fill();
+      }
+    } else if (type === 'management') {
+      context.strokeRect(iconLeft + 0.5, iconTop + 0.5, 32, 21);
+      context.moveTo(iconLeft + 5, iconTop + 6);
+      context.lineTo(iconLeft + 11, iconTop + 10);
+      context.lineTo(iconLeft + 5, iconTop + 14);
+      context.stroke();
+      context.fillRect(iconLeft + 15, iconTop + 13, 10, 1);
+    } else if (type === 'probe') {
+      context.beginPath();
+      context.arc(iconLeft + 16, iconTop + 11, 3, 0, Math.PI * 2);
+      context.fill();
+      [8, 14].forEach((radius) => {
+        context.beginPath();
+        context.arc(iconLeft + 16, iconTop + 11, radius, -Math.PI * 0.72, Math.PI * 0.72);
+        context.stroke();
+      });
+    }
+
+    context.fillStyle = 'rgba(81,121,145,.16)';
+    context.fillRect(contentLeft, y + height - 15, contentWidth, 3);
+    const activity = 0.48 + (Math.sin(time * 2.2 + x * 0.01) + 1) * 0.19;
+    context.fillStyle = hovered ? '#3dffb3' : active ? '#35d8ff' : '#527c95';
+    context.globalAlpha = hovered ? 1 : 0.72;
+    context.fillRect(contentLeft, y + height - 15, contentWidth * activity, 3);
+    context.beginPath();
+    context.arc(x + width - 11, y + height - 10, 2.4, 0, Math.PI * 2);
+    context.fillStyle = '#3dffb3';
+    context.shadowBlur = 4;
+    context.shadowColor = '#3dffb3';
+    context.fill();
+    context.restore();
+  }
+
+  drawRackDetail(time) {
+    const context = this.context;
+    const width = this.width;
+    const height = this.height;
+    const compact = width < 700;
+    const progress = this.transitionProgress();
+    const target = { x: width * 0.08, y: height * 0.09, width: width * 0.84, height: height * 0.82 };
+    const origin = this.zoomOrigin || target;
+    const frame = {
+      x: origin.x + (target.x - origin.x) * progress,
+      y: origin.y + (target.y - origin.y) * progress,
+      width: origin.width + (target.width - origin.width) * progress,
+      height: origin.height + (target.height - origin.height) * progress,
+    };
+
+    context.save();
+    context.strokeStyle = 'rgba(53,216,255,' + (0.18 + progress * 0.22) + ')';
+    context.fillStyle = 'rgba(3,14,24,' + (0.28 + progress * 0.42) + ')';
+    context.fillRect(frame.x, frame.y, frame.width, frame.height);
+    context.strokeRect(frame.x + 0.5, frame.y + 0.5, frame.width - 1, frame.height - 1);
+    context.restore();
+
+    if (progress < 0.18) return;
+    context.save();
+    context.globalAlpha = Math.min(1, (progress - 0.18) / 0.55);
+    const centerX = compact ? width * 0.43 : width * 0.42;
+    const panelWidth = compact ? width * 0.58 : Math.min(250, width * 0.3);
+    const panelHeight = compact ? 54 : 58;
+    const routerY = height * 0.2;
+    const firewallY = height * 0.39;
+    const switchY = height * 0.58;
+    const probePoint = { x: width * 0.79, y: height * 0.4 };
+    const controllerPoint = { x: width * 0.79, y: height * 0.69 };
+    const panelX = centerX - panelWidth / 2;
+    const routerCenter = { x: centerX, y: routerY + panelHeight / 2 };
+    const firewallCenter = { x: centerX, y: firewallY + panelHeight / 2 };
+    const switchCenter = { x: centerX, y: switchY + panelHeight / 2 };
+
+    this.drawFlowTag(target.x + 18, target.y + 38, String(this.selectedRack + 1).padStart(2, '0'), 'RACK NETWORK PATH', true, 'left');
+    this.drawLabel('UPLINK', centerX, routerY - 24);
+    this.drawDownFlow({ x: centerX, y: routerY - 17 }, { x: centerX, y: routerY - 2 }, time, '#35d8ff', 0.8);
+    this.drawDevicePanel(panelX, routerY, panelWidth, panelHeight, 'EDGE ROUTER', 'router', time, true);
+    this.drawDownFlow({ x: centerX, y: routerY + panelHeight }, { x: centerX, y: firewallY }, time, '#35d8ff', 0.9);
+    this.drawDevicePanel(panelX, firewallY, panelWidth, panelHeight, 'FIREWALL', 'firewall', time, true);
+    this.drawDownFlow({ x: centerX, y: firewallY + panelHeight }, { x: centerX, y: switchY }, time, '#35d8ff', 1);
+
+    const switchRegion = {
+      id: 'core-switch',
+      type: 'switch',
+      index: 0,
+      x: panelX,
+      y: switchY,
+      width: panelWidth,
+      height: panelHeight,
+    };
+    const switchHovered = this.hoverTarget === switchRegion.id;
+    this.hitRegions.push(switchRegion);
+    this.drawDevicePanel(panelX, switchY, panelWidth, panelHeight, 'CORE / TOP-OF-RACK SWITCH', 'switch', time, true, switchHovered);
+
+    this.drawNode(probePoint.x, probePoint.y, compact ? 17 : 21, 'CLOUDMON PROBE', time * 2.1);
+    this.drawNode(controllerPoint.x, controllerPoint.y, compact ? 15 : 19, 'CONTROLLER', time * 1.8);
+    [routerCenter, firewallCenter, switchCenter].forEach((device, index) => this.drawTelemetryPath(device, probePoint, time, index * 0.28));
+    this.drawTelemetryPath(probePoint, controllerPoint, time, 0.15);
+
+    const fanY = height * 0.78;
+    this.drawColorLine({ x: switchCenter.x, y: switchY + panelHeight }, { x: switchCenter.x, y: fanY }, '#3dffb3', 0.28, 1, true);
+    [-1, 0, 1].forEach((offset) => {
+      const endpoint = { x: switchCenter.x + offset * (compact ? 34 : 48), y: fanY + 18 };
+      this.drawColorLine({ x: switchCenter.x, y: fanY }, endpoint, '#3dffb3', 0.22, 1, true);
+      this.drawColorPacket([{ x: switchCenter.x, y: fanY }, endpoint], time * 0.15 + offset * 0.2, '#3dffb3', 1.8, 0.7);
+      context.beginPath();
+      context.arc(endpoint.x, endpoint.y, 3, 0, Math.PI * 2);
+      context.fillStyle = '#3dffb3';
+      context.globalAlpha = 0.7;
+      context.fill();
+    });
+    this.drawLabel(switchHovered ? 'SELECT TO EXPAND' : 'CONNECTED EQUIPMENT', switchCenter.x, fanY + 42);
+    context.restore();
+  }
+
+  drawSwitchDetail(time) {
+    const context = this.context;
+    const width = this.width;
+    const height = this.height;
+    const compact = width < 700;
+    const progress = this.transitionProgress();
+    context.save();
+    context.globalAlpha = 0.24 + progress * 0.76;
+    context.translate(0, (1 - progress) * 28);
+
+    const switchWidth = compact ? width * 0.78 : Math.min(410, width * 0.46);
+    const switchHeight = compact ? 60 : 68;
+    const switchX = width / 2 - switchWidth / 2;
+    const switchY = compact ? height * 0.11 : height * 0.13;
+    this.drawFlowTag(28, 78, String(this.selectedRack + 1).padStart(2, '0'), 'SWITCH CONNECTIONS', true, 'left');
+    this.drawDevicePanel(switchX, switchY, switchWidth, switchHeight, 'CORE / TOP-OF-RACK SWITCH', 'switch', time, true);
+
+    const switchBottom = { x: width / 2, y: switchY + switchHeight };
+    const busY = compact ? height * 0.32 : height * 0.35;
+    this.drawDownFlow(switchBottom, { x: width / 2, y: busY }, time, '#35d8ff', 1);
+
+    const deviceDefinitions = [
+      { label: 'COMPUTE SERVER 01', type: 'server' },
+      { label: 'COMPUTE SERVER 02', type: 'server' },
+      { label: 'STORAGE ARRAY', type: 'storage' },
+      { label: 'MANAGEMENT HOST', type: 'management' },
+    ];
+    const deviceWidth = compact ? width * 0.39 : Math.min(190, width * 0.2);
+    const deviceHeight = compact ? 62 : 68;
+    const positions = compact
+      ? [
+          { x: width * 0.07, y: height * 0.4 },
+          { x: width * 0.54, y: height * 0.4 },
+          { x: width * 0.07, y: height * 0.62 },
+          { x: width * 0.54, y: height * 0.62 },
+        ]
+      : [
+          { x: width * 0.05, y: height * 0.47 },
+          { x: width * 0.28, y: height * 0.47 },
+          { x: width * 0.51, y: height * 0.47 },
+          { x: width * 0.74, y: height * 0.47 },
+        ];
+    const probePoint = compact ? { x: width * 0.5, y: height * 0.87 } : { x: width * 0.5, y: height * 0.79 };
+
+    positions.forEach((position, index) => {
+      const center = { x: position.x + deviceWidth / 2, y: position.y + deviceHeight / 2 };
+      const branch = compact
+        ? [
+            { x: width / 2, y: busY },
+            { x: center.x, y: busY },
+            { x: center.x, y: position.y },
+          ]
+        : [
+            { x: width / 2, y: busY },
+            { x: center.x, y: busY },
+            { x: center.x, y: position.y },
+          ];
+      this.drawPolyline(branch, 0.35);
+      this.drawColorPacket(branch, time * 0.18 + index * 0.21, '#35d8ff', 2.5, 0.85);
+      const region = {
+        id: 'device-' + index,
+        type: 'device',
+        index,
+        x: position.x,
+        y: position.y,
+        width: deviceWidth,
+        height: deviceHeight,
+      };
+      const hovered = this.hoverTarget === region.id;
+      if (progress > 0.55) this.hitRegions.push(region);
+      this.drawDevicePanel(position.x, position.y, deviceWidth, deviceHeight, deviceDefinitions[index].label, deviceDefinitions[index].type, time, index < 2, hovered);
+      this.drawTelemetryPath(center, probePoint, time, index * 0.21);
+    });
+
+    this.drawNode(probePoint.x, probePoint.y, compact ? 19 : 23, 'CLOUDMON PROBE', time * 2.2);
+    this.drawLabel('SELECT ANY CONNECTED DEVICE', width / 2, height - 42);
+    context.restore();
+  }
+
+  drawDeviceDetail(time) {
+    const context = this.context;
+    const width = this.width;
+    const height = this.height;
+    const compact = width < 700;
+    const progress = this.transitionProgress();
+    const definitions = [
+      { label: 'COMPUTE SERVER 01', type: 'server', modules: ['CPU', 'MEMORY', 'DISK', 'NETWORK'] },
+      { label: 'COMPUTE SERVER 02', type: 'server', modules: ['CPU', 'MEMORY', 'DISK', 'NETWORK'] },
+      { label: 'STORAGE ARRAY', type: 'storage', modules: ['CAPACITY', 'IOPS', 'LATENCY', 'PORTS'] },
+      { label: 'MANAGEMENT HOST', type: 'management', modules: ['CPU', 'MEMORY', 'VIRTUAL HOSTS', 'SERVICES'] },
+    ];
+    const device = definitions[this.selectedDevice] || definitions[0];
+    context.save();
+    context.globalAlpha = 0.2 + progress * 0.8;
+    context.translate(0, (1 - progress) * 28);
+    this.drawFlowTag(28, 78, String(this.selectedRack + 1).padStart(2, '0'), device.label, true, 'left');
+
+    const chassis = compact
+      ? { x: width * 0.08, y: height * 0.14, width: width * 0.84, height: height * 0.36 }
+      : { x: width * 0.08, y: height * 0.19, width: width * 0.5, height: height * 0.52 };
+    this.drawDevicePanel(chassis.x, chassis.y, chassis.width, chassis.height, device.label, device.type, time, true);
+
+    const columns = compact ? 2 : 2;
+    const gap = compact ? 12 : 16;
+    const moduleWidth = (chassis.width - 32 - gap) / columns;
+    const moduleHeight = compact ? 54 : 64;
+    const moduleTop = chassis.y + (compact ? 75 : 88);
+    device.modules.forEach((module, index) => {
+      const column = index % columns;
+      const row = Math.floor(index / columns);
+      const x = chassis.x + 16 + column * (moduleWidth + gap);
+      const y = moduleTop + row * (moduleHeight + gap);
+      context.fillStyle = 'rgba(4,14,24,.88)';
+      context.strokeStyle = 'rgba(53,216,255,.2)';
+      context.fillRect(x, y, moduleWidth, moduleHeight);
+      context.strokeRect(x + 0.5, y + 0.5, moduleWidth - 1, moduleHeight - 1);
+      context.fillStyle = 'rgba(194,216,229,.9)';
+      context.font = '600 7px Inter, Arial, sans-serif';
+      context.letterSpacing = '.75px';
+      context.textAlign = 'left';
+      context.fillText(module, x + 9, y + 14);
+      const value = 0.32 + (Math.sin(time * (1.4 + index * 0.17) + index) + 1) * 0.24;
+      context.fillStyle = 'rgba(67,116,143,.18)';
+      context.fillRect(x + 9, y + moduleHeight - 13, moduleWidth - 18, 3);
+      context.fillStyle = index === 2 ? '#8127ff' : '#35d8ff';
+      context.fillRect(x + 9, y + moduleHeight - 13, (moduleWidth - 18) * value, 3);
+    });
+
+    const agent = compact ? { x: width * 0.29, y: height * 0.64 } : { x: width * 0.7, y: height * 0.36 };
+    const probe = compact ? { x: width * 0.71, y: height * 0.64 } : { x: width * 0.86, y: height * 0.52 };
+    const controller = compact ? { x: width * 0.5, y: height * 0.84 } : { x: width * 0.7, y: height * 0.75 };
+    this.drawNode(agent.x, agent.y, compact ? 19 : 23, this.selectedDevice < 2 || this.selectedDevice === 3 ? 'CLOUDMON AGENT' : 'API / SNMP', time * 2.1);
+    this.drawNode(probe.x, probe.y, compact ? 19 : 23, 'CLOUDMON PROBE', time * 2.3);
+    this.drawNode(controller.x, controller.y, compact ? 18 : 22, 'CONTROLLER', time * 1.9);
+    const chassisOutput = compact ? { x: width * 0.5, y: chassis.y + chassis.height } : { x: chassis.x + chassis.width, y: chassis.y + chassis.height * 0.5 };
+    this.drawTelemetryPath(chassisOutput, agent, time, 0.1);
+    this.drawTelemetryPath(agent, probe, time, 0.42);
+    this.drawTelemetryPath(probe, controller, time, 0.76);
+    context.restore();
+  }
+
+  drawInfrastructureDetail(time) {
+    if (this.detailMode === 'rack') this.drawRackDetail(time);
+    else if (this.detailMode === 'switch') this.drawSwitchDetail(time);
+    else this.drawDeviceDetail(time);
+  }
+
   drawInfrastructure(time) {
     const width = this.width;
     const height = this.height;
@@ -462,8 +1335,16 @@ class CoverageWizardVisualizer {
     const rackXs = [width * 0.09, width * 0.25, width * 0.41];
     const core = { x: width * 0.72, y: height * 0.5 };
     rackXs.forEach((x, rackIndex) => {
+      const region = { id: 'rack-' + rackIndex, type: 'rack', index: rackIndex, x, y: rackY, width: rackWidth, height: rackHeight };
+      const hovered = this.hoverTarget === region.id;
+      this.hitRegions.push(region);
+      this.context.save();
+      if (hovered) {
+        this.context.shadowBlur = 9;
+        this.context.shadowColor = '#35d8ff';
+      }
       this.context.fillStyle = 'rgba(4,17,29,.9)';
-      this.context.strokeStyle = 'rgba(53,216,255,.28)';
+      this.context.strokeStyle = hovered ? 'rgba(53,216,255,.86)' : 'rgba(53,216,255,.28)';
       this.context.fillRect(x, rackY, rackWidth, rackHeight);
       this.context.strokeRect(x + 0.5, rackY + 0.5, rackWidth - 1, rackHeight - 1);
       for (let unit = 0; unit < 5; unit += 1) {
@@ -476,10 +1357,12 @@ class CoverageWizardVisualizer {
         this.context.fillStyle = 'rgba(53,216,255,.12)';
         this.context.fillRect(x + rackWidth - 29, unitY + 5, 16, 2);
       }
+      this.context.restore();
       const start = { x: x + rackWidth, y: rackY + rackHeight / 2 };
       this.drawLine(start, core, 0.24);
       this.drawPacket([start, core], (time * 0.22 + rackIndex * 0.27) % 1);
       this.drawLabel('RACK ' + String(rackIndex + 1).padStart(2, '0'), x + rackWidth / 2, rackY - 9);
+      if (hovered) this.drawLabel('SELECT', x + rackWidth / 2, rackY + rackHeight + 15);
     });
     this.drawNode(core.x, core.y, 22, 'COLLECTOR', time * 2);
     this.drawStepFocus(core.x, core.y, time);
@@ -678,48 +1561,94 @@ const wizardStepTitle = $('[data-wizard-step-title]', coverageWizard);
 const wizardStepDescription = $('[data-wizard-step-description]', coverageWizard);
 const wizardSceneLabel = $('[data-wizard-scene-label]', coverageWizard);
 const wizardSignals = $$('[data-wizard-signal]', coverageWizard);
-const wizardInsight = $('[data-wizard-insight]', coverageWizard);
-const wizardPoints = $('[data-wizard-points]', coverageWizard);
-const wizardMetricLabels = $$('[data-wizard-metric-label]', coverageWizard);
-const wizardMetricValues = $$('[data-wizard-metric-value]', coverageWizard);
-const wizardStepButtons = $$('[data-wizard-step]', coverageWizard);
 const wizardPrevious = $('[data-wizard-prev]', coverageWizard);
 const wizardNext = $('[data-wizard-next]', coverageWizard);
 const wizardProgress = $('[data-wizard-progress]', coverageWizard);
 const wizardSelectedCard = $('[data-wizard-selected]', coverageWizard);
+const wizardSourceStatus = $('.wizard-source-status b', coverageWizard);
+const wizardStage = $('[data-wizard-stage]', coverageWizard);
+const wizardLive = $('.wizard-live', coverageWizard);
+const wizardTopologyBack = document.createElement('button');
+wizardTopologyBack.className = 'wizard-topology-back';
+wizardTopologyBack.type = 'button';
+wizardTopologyBack.hidden = true;
+wizardStage?.append(wizardTopologyBack);
+coverageWizard?.classList.add('is-flow-visual');
+$('.wizard-steps', coverageWizard)?.remove();
+$('.wizard-detail-grid', coverageWizard)?.remove();
+$('.wizard-selection-note', coverageWizard)?.remove();
+wizardStepLabel.textContent = 'CONNECTED OPERATIONS';
+wizardStepTitle.textContent = 'One signal. One continuous view.';
+wizardStepDescription.textContent = 'Watch the topology trace an issue from live telemetry to response.';
+if (wizardLive) {
+  const liveDot = $('i', wizardLive);
+  wizardLive.replaceChildren(...(liveDot ? [liveDot] : []), 'Live animation');
+}
+wizardPrevious.removeAttribute('disabled');
+wizardPrevious.classList.add('wizard-animation-toggle');
+wizardNext.classList.add('wizard-animation-replay');
+wizardNext.textContent = 'Replay from start';
+wizardProgress.textContent = 'Signals → context → impact → response';
 /** @type {HTMLElement | null} */
 let activeCoverageCard = null;
 let activeCoverageKey = 'infrastructure';
-let activeWizardStep = 0;
+let coverageAnimationPlaying = false;
 
-const renderCoverageWizardStep = (step) => {
-  const category = coverageWizardData[activeCoverageKey];
-  const detail = category.steps[step];
-  const stepDefinition = coverageWizardSteps[step];
-  activeWizardStep = step;
-  wizardStepLabel.textContent = 'Step ' + String(step + 1).padStart(2, '0') + ' / 03';
-  wizardStepTitle.textContent = stepDefinition.title;
-  wizardStepDescription.textContent = stepDefinition.description;
-  wizardInsight.textContent = detail.insight;
-  wizardProgress.textContent = String(step + 1) + ' of 3';
-  wizardPrevious.disabled = step === 0;
-  wizardNext.innerHTML = step === 2 ? 'Close explorer <span aria-hidden="true">×</span>' : 'Continue <span aria-hidden="true">→</span>';
-  wizardPoints.replaceChildren(...detail.points.map((point) => {
-    const item = document.createElement('li');
-    item.textContent = point;
-    return item;
-  }));
-  detail.metrics.forEach((metric, index) => {
-    wizardMetricLabels[index].textContent = metric[0];
-    wizardMetricValues[index].textContent = metric[1];
-  });
-  wizardStepButtons.forEach((button, index) => {
-    const active = index === step;
-    button.classList.toggle('is-active', active);
-    if (active) button.setAttribute('aria-current', 'step');
-    else button.removeAttribute('aria-current');
-  });
-  coverageVisualizer.setStep(step);
+const syncTopologyDrilldown = () => {
+  const infrastructureActive = activeCoverageKey === 'infrastructure';
+  const mode = coverageVisualizer.getDetailMode();
+  const detailActive = infrastructureActive && mode !== 'overview';
+  wizardTopologyBack.hidden = !detailActive;
+  wizardTopologyBack.textContent = mode === 'rack' ? '← Full topology' : mode === 'switch' ? '← Back to rack' : '← Back to switch';
+  coverageWizardCanvas?.classList.toggle('is-interactive', infrastructureActive);
+  if (coverageWizardCanvas) {
+    coverageWizardCanvas.tabIndex = infrastructureActive ? 0 : -1;
+    coverageWizardCanvas.setAttribute('aria-hidden', String(!infrastructureActive));
+    if (infrastructureActive) {
+      coverageWizardCanvas.setAttribute('role', 'button');
+      coverageWizardCanvas.setAttribute(
+        'aria-label',
+        mode === 'overview'
+          ? 'Interactive rack topology. Use the pointer or arrow keys to select a rack, then press Enter to expand it.'
+          : mode === 'rack'
+            ? 'Expanded rack network path. Select the core switch to reveal connected equipment.'
+            : mode === 'switch'
+              ? 'Expanded switch connections. Select a server, storage array or management host for monitored detail.'
+              : 'Expanded monitored device with its Cloudmon telemetry path.',
+      );
+    } else {
+      coverageWizardCanvas.removeAttribute('role');
+      coverageWizardCanvas.removeAttribute('aria-label');
+    }
+  }
+  wizardStage?.setAttribute('role', infrastructureActive ? 'group' : 'img');
+  if (wizardStage) wizardStage.dataset.topologyMode = infrastructureActive ? mode : 'overview';
+};
+
+const syncCoverageAnimationControls = () => {
+  coverageWizard?.classList.toggle('is-playing', coverageAnimationPlaying);
+  wizardPrevious.textContent = coverageAnimationPlaying ? 'Pause animation' : 'Resume animation';
+  wizardSourceStatus.textContent = coverageAnimationPlaying ? 'Running' : 'Paused';
+};
+
+const pauseCoverageAnimation = () => {
+  coverageAnimationPlaying = false;
+  coverageVisualizer.stop();
+  syncCoverageAnimationControls();
+};
+
+const resumeCoverageAnimation = () => {
+  if (coverageAnimationPlaying) return;
+  coverageAnimationPlaying = true;
+  if (!reducedMotion) coverageVisualizer.start();
+  syncCoverageAnimationControls();
+};
+
+const replayCoverageAnimation = () => {
+  coverageAnimationPlaying = true;
+  coverageVisualizer.restart();
+  if (!reducedMotion) coverageVisualizer.start();
+  syncCoverageAnimationControls();
 };
 
 const openCoverageWizard = (card) => {
@@ -735,12 +1664,13 @@ const openCoverageWizard = (card) => {
   wizardSummary.textContent = $('p', card)?.textContent || '';
   wizardSceneLabel.textContent = category.label;
   wizardSignals.forEach((signal, index) => { signal.textContent = category.signals[index]; });
-  $('[data-wizard-stage]', coverageWizard)?.setAttribute('aria-label', cardTitle + ' animated topology');
-  renderCoverageWizardStep(0);
+  wizardStage?.setAttribute('aria-label', cardTitle + ' animated topology showing signals, context, impact and guided response in one continuous diagram');
   card.classList.add('is-wizard-source');
   coverageWizard.showModal();
   document.body.classList.add('wizard-open');
   coverageVisualizer.open(activeCoverageKey);
+  replayCoverageAnimation();
+  syncTopologyDrilldown();
 
   scope.requestAnimationFrame(() => scope.requestAnimationFrame(() => {
     const targetRect = wizardSelectedCard.getBoundingClientRect();
@@ -762,29 +1692,66 @@ const closeCoverageWizard = () => {
 };
 
 coverageCards.forEach((card) => scope.on(card, 'click', () => openCoverageWizard(card)));
-wizardStepButtons.forEach((button) => {
-  scope.on(button, 'click', () => renderCoverageWizardStep(Number(button.dataset.wizardStep)));
-  scope.on(button, 'keydown', (event) => {
-    if (!['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+scope.on(coverageWizardCanvas, 'pointermove', (event) => {
+  if (activeCoverageKey !== 'infrastructure') return;
+  const rect = coverageWizardCanvas.getBoundingClientRect();
+  const target = coverageVisualizer.hitTest(event.clientX - rect.left, event.clientY - rect.top);
+  coverageVisualizer.setHoverTarget(target);
+  coverageWizardCanvas.style.cursor = target ? 'pointer' : 'default';
+});
+scope.on(coverageWizardCanvas, 'pointerleave', () => {
+  coverageVisualizer.setHoverTarget(null);
+  coverageWizardCanvas.style.cursor = 'default';
+});
+scope.on(coverageWizardCanvas, 'click', (event) => {
+  if (activeCoverageKey !== 'infrastructure') return;
+  const rect = coverageWizardCanvas.getBoundingClientRect();
+  if (!coverageVisualizer.activateAt(event.clientX - rect.left, event.clientY - rect.top)) return;
+  if (!coverageAnimationPlaying) resumeCoverageAnimation();
+  syncTopologyDrilldown();
+});
+scope.on(coverageWizardCanvas, 'keydown', (event) => {
+  if (activeCoverageKey !== 'infrastructure') return;
+  if (event.key === 'Escape' && coverageVisualizer.getDetailMode() !== 'overview') {
     event.preventDefault();
-    const direction = event.key === 'ArrowRight' ? 1 : -1;
-    const nextStep = (Number(button.dataset.wizardStep) + direction + wizardStepButtons.length) % wizardStepButtons.length;
-    renderCoverageWizardStep(nextStep);
-    wizardStepButtons[nextStep].focus();
-  });
+    coverageVisualizer.backDetail();
+    syncTopologyDrilldown();
+    return;
+  }
+  if (event.key === 'ArrowLeft' || event.key === 'ArrowUp' || event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+    event.preventDefault();
+    coverageVisualizer.keyboardTarget(event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 1);
+    return;
+  }
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  event.preventDefault();
+  const target = coverageVisualizer.keyboardTarget(0);
+  if (!target || !coverageVisualizer.activateTarget(target)) return;
+  if (!coverageAnimationPlaying) resumeCoverageAnimation();
+  syncTopologyDrilldown();
 });
-scope.on(wizardPrevious, 'click', () => renderCoverageWizardStep(Math.max(0, activeWizardStep - 1)));
-scope.on(wizardNext, 'click', () => {
-  if (activeWizardStep === coverageWizardSteps.length - 1) closeCoverageWizard();
-  else renderCoverageWizardStep(activeWizardStep + 1);
+scope.on(wizardTopologyBack, 'click', () => {
+  if (!coverageVisualizer.backDetail()) return;
+  if (!coverageAnimationPlaying) resumeCoverageAnimation();
+  syncTopologyDrilldown();
+  coverageWizardCanvas?.focus({ preventScroll: true });
 });
+scope.on(wizardPrevious, 'click', () => {
+  if (coverageAnimationPlaying) pauseCoverageAnimation();
+  else resumeCoverageAnimation();
+});
+scope.on(wizardNext, 'click', replayCoverageAnimation);
 scope.on($('[data-wizard-close]', coverageWizard), 'click', closeCoverageWizard);
 scope.on(coverageWizard, 'click', (event) => {
   if (event.target === coverageWizard) closeCoverageWizard();
 });
 scope.on(coverageWizard, 'close', () => {
+  coverageAnimationPlaying = false;
+  syncCoverageAnimationControls();
   document.body.classList.remove('wizard-open');
   coverageVisualizer.close();
+  coverageVisualizer.resetDetailView();
+  syncTopologyDrilldown();
   activeCoverageCard?.classList.remove('is-wizard-source');
   const returnTarget = activeCoverageCard;
   activeCoverageCard = null;

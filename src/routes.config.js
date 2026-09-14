@@ -3,7 +3,7 @@
 export const SITE_ORIGIN = 'https://deepiq.lk';
 
 /**
- * @typedef {'home' | 'cloudmon' | 'miphi' | 'privacy'} ViewName
+ * @typedef {'home' | 'cloudmon' | 'miphi' | 'rayan' | 'privacy'} ViewName
  * @typedef {{
  *   path: string;
  *   view: ViewName;
@@ -144,6 +144,59 @@ export const APP_ROUTES = Object.freeze([
     priority: 0.8,
   },
   {
+    path: '/rayan',
+    view: 'rayan',
+    title: 'Rayan Automation Solutions | DeepIQ',
+    description:
+      'Rayan connects intelligent hardware, software and Smart Hub technology for residential, commercial and industrial automation.',
+    priority: 0.9,
+  },
+  {
+    path: '/rayan/technology',
+    view: 'rayan',
+    anchor: 'technology',
+    title: 'Rayan Automation Technology | DeepIQ',
+    description:
+      'Discover the connected hardware, software and automation technology behind Rayan solutions.',
+    priority: 0.7,
+  },
+  {
+    path: '/rayan/smart-hub',
+    view: 'rayan',
+    anchor: 'smart-hub',
+    title: 'Rayan Smart Hub Ecosystem | DeepIQ',
+    description:
+      'See how the Rayan Smart Hub connects devices, systems and applications across intelligent environments.',
+    priority: 0.8,
+  },
+  {
+    path: '/rayan/environments',
+    view: 'rayan',
+    anchor: 'environments',
+    title: 'Rayan Residential, Commercial and Industrial Automation | DeepIQ',
+    description:
+      'Explore Rayan automation for connected homes, commercial buildings and industrial environments.',
+    priority: 0.8,
+  },
+  {
+    path: '/rayan/sustainability',
+    view: 'rayan',
+    anchor: 'sustainability',
+    title: 'Sustainable Automation from Rayan | DeepIQ',
+    description:
+      'Use Rayan automation to improve energy visibility, optimize resources and reduce operating impact.',
+    priority: 0.7,
+  },
+  {
+    path: '/rayan/why',
+    view: 'rayan',
+    anchor: 'why',
+    title: 'Why Rayan Automation Solutions | DeepIQ',
+    description:
+      'Learn how Rayan combines its own technology, reliable performance, scalability and practical customer support.',
+    priority: 0.7,
+  },
+  {
     path: '/privacy',
     view: 'privacy',
     title: 'Privacy Policy | DeepIQ',
@@ -158,6 +211,8 @@ export const ROUTE_ALIASES = Object.freeze({
   '/cloudmon/index.html': '/cloudmon',
   '/miphi.html': '/miphi',
   '/miphi/index.html': '/miphi',
+  '/rayan.html': '/rayan',
+  '/rayan/index.html': '/rayan',
 });
 
 export const APP_ROUTE_PATHS = Object.freeze(APP_ROUTES.map(({ path }) => path));
