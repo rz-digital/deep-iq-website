@@ -17,6 +17,7 @@ html{scroll-behavior:smooth;background:var(--ink)}
 body{margin:0;overflow-x:hidden;background:var(--ink);color:var(--white);font-family:var(--sans)}
 a{color:inherit;text-decoration:none}
 button{color:inherit;font:inherit}
+main .primary-button{display:none}
 ::selection{background:var(--cyan);color:white}
 .skip-link{position:fixed;z-index:1000;top:10px;left:10px;padding:10px 14px;border:0;background:white;color:#09090c;cursor:pointer;transform:translateY(-160%);transition:transform .2s}
 .skip-link:focus{transform:none}
@@ -30,7 +31,7 @@ button{color:inherit;font:inherit}
 .deepiq-brand img{width:27px;height:43px;margin-right:9px;object-fit:contain}
 .deepiq-brand b{margin-left:.2em;color:#025EAD;font-weight:600}
 
-.desktop-nav{display:flex;justify-content:center;align-items:center;gap:clamp(18px,2vw,36px);margin-left:auto;font-size:12px}
+.desktop-nav{display:flex;justify-content:center;align-items:center;gap:clamp(18px,2vw,36px);margin-left:auto;font-size:13px}
 .desktop-nav a{position:relative;color:#d0d1d8}
 .desktop-nav a::after{content:"";position:absolute;right:100%;bottom:-8px;left:0;height:1px;background:var(--cyan);transition:right .25s}
 .desktop-nav a:hover::after,.desktop-nav a:focus-visible::after{right:0}
@@ -345,4 +346,16 @@ body.workload-wizard-open{overflow:hidden}
 @media(prefers-reduced-motion:reduce){
   .workload-wizard[open],.workload-wizard-shell,.workload-wizard-live i,.workload-wizard-metrics i{animation:none!important}
   .workload-card,.workload-wizard-selected-card{transition:none!important}
+}
+
+.miphi-hero h1{font-size:clamp(4.15rem,8.8vw,9.9rem)}
+.foundation-heading h2,.venture-copy h2,.workload-head h2,.engineering-copy h2,.india-grid h2,.intelligence-grid h2,.region-grid h2{font-size:clamp(2.8rem,5.5vw,6.35rem)}
+.final-inner h2{font-size:clamp(2.8rem,5.9vw,6.6rem)}
+@media(max-width:800px){
+  .miphi-hero h1{font-size:clamp(3.5rem,12.4vw,6rem)}
+}
+@media(max-width:540px){
+  .miphi-hero h1{font-size:clamp(3.1rem,11.3vw,4.3rem)}
+  .foundation-heading h2,.venture-copy h2,.workload-head h2,.engineering-copy h2,.india-grid h2,.intelligence-grid h2,.region-grid h2{font-size:2.75rem}
+  .final-inner h2{font-size:3.05rem}
 }

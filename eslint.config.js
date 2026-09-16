@@ -13,6 +13,7 @@ const browserFiles = [
   'src/telemetry.js',
   'src/content-validation.js',
   'src/cookie-consent.js',
+  'src/shared-footer.js',
   'src/views/**/*.js',
 ];
 

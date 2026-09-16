@@ -22,6 +22,7 @@
     "src/content-validation.js",
     "src/routes.config.js",
     "src/cookie-consent.js",
+    "src/shared-footer.js",
     "src/privacy.js",
     "src/views/privacy.js"
   ]
