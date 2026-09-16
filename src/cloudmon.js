@@ -234,6 +234,75 @@ const coverageWizardData = {
   },
 };
 
+const coverageExpansionData = {
+  network: {
+    title: 'LIVE NETWORK PATH',
+    items: [
+      ['SITE EDGE', 'router'],
+      ['SD-WAN GATEWAY', 'router'],
+      ['WAN CIRCUIT', 'management'],
+      ['CORE SWITCH', 'switch'],
+      ['CLOUD ENDPOINT', 'server'],
+    ],
+    metrics: ['LATENCY', 'JITTER', 'PACKET LOSS'],
+  },
+  cloud: {
+    title: 'HYBRID CLOUD DEPENDENCIES',
+    items: [
+      ['ON-PREMISE AGENT', 'server'],
+      ['CLOUD GATEWAY', 'router'],
+      ['REGION SERVICE', 'management'],
+      ['APPLICATION CLUSTER', 'server'],
+      ['DATA STORE', 'storage'],
+    ],
+    metrics: ['UTILISATION', 'REQUESTS', 'CAPACITY'],
+  },
+  applications: {
+    title: 'APPLICATION REQUEST PATH',
+    items: [
+      ['USER EDGE', 'management'],
+      ['API GATEWAY', 'router'],
+      ['APPLICATION SERVICE', 'server'],
+      ['WORKER SERVICE', 'server'],
+      ['DATABASE', 'storage'],
+    ],
+    metrics: ['RESPONSE', 'ERROR RATE', 'THROUGHPUT'],
+  },
+  industrial: {
+    title: 'OT PRODUCTION PATH',
+    items: [
+      ['SENSOR GATEWAY', 'probe'],
+      ['PLC CONTROLLER', 'management'],
+      ['PRODUCTION CELL', 'server'],
+      ['VARIABLE DRIVE', 'management'],
+      ['CONTROL ROOM', 'management'],
+    ],
+    metrics: ['TEMPERATURE', 'VIBRATION', 'CYCLE TIME'],
+  },
+  iot: {
+    title: 'EDGE DEVICE FLEET',
+    items: [
+      ['EDGE SENSOR', 'probe'],
+      ['DEVICE GATEWAY', 'router'],
+      ['EDGE PROCESSOR', 'server'],
+      ['IOT PLATFORM', 'management'],
+      ['TELEMETRY STORE', 'storage'],
+    ],
+    metrics: ['SIGNAL QUALITY', 'BATTERY', 'EVENT RATE'],
+  },
+  ai: {
+    title: 'AI WORKLOAD PIPELINE',
+    items: [
+      ['MODEL SERVICE', 'management'],
+      ['GPU COMPUTE NODE', 'server'],
+      ['HIGH-SPEED FABRIC', 'switch'],
+      ['MEMORY POOL', 'storage'],
+      ['INFERENCE ENDPOINT', 'server'],
+    ],
+    metrics: ['GPU UTILISATION', 'MEMORY', 'INFERENCE'],
+  },
+};
+
 class CoverageWizardVisualizer {
   constructor(canvas) {
     this.canvas = canvas;
@@ -252,6 +321,7 @@ class CoverageWizardVisualizer {
     this.detailMode = 'overview';
     this.selectedRack = 0;
     this.selectedDevice = 0;
+    this.selectedItem = 0;
     this.hitRegions = [];
     this.hoverTarget = '';
     this.zoomOrigin = null;
@@ -288,6 +358,7 @@ class CoverageWizardVisualizer {
     this.detailMode = 'overview';
     this.selectedRack = 0;
     this.selectedDevice = 0;
+    this.selectedItem = 0;
     this.hitRegions = [];
     this.hoverTarget = '';
     this.zoomOrigin = null;
@@ -299,10 +370,12 @@ class CoverageWizardVisualizer {
   }
 
   backDetail() {
+    if (this.scene !== 'infrastructure' && this.detailMode === 'expanded') this.detailMode = 'overview';
     if (this.detailMode === 'device') this.detailMode = 'switch';
     else if (this.detailMode === 'switch') this.detailMode = 'rack';
     else if (this.detailMode === 'rack') this.detailMode = 'overview';
-    else return false;
+    else if (this.detailMode !== 'overview') return false;
+    else if (this.scene === 'infrastructure') return false;
     this.hoverTarget = '';
     this.transitionStart = this.elapsedTime;
     this.drawFrame(this.elapsedTime);
@@ -336,6 +409,10 @@ class CoverageWizardVisualizer {
     } else if (target.type === 'device') {
       this.selectedDevice = target.index;
       this.detailMode = 'device';
+    } else if (target.type === 'scene-item' && this.scene !== 'infrastructure') {
+      this.selectedItem = target.detailIndex ?? target.index;
+      this.zoomOrigin = { x: target.x, y: target.y, width: target.width, height: target.height };
+      this.detailMode = 'expanded';
     } else {
       return false;
     }
@@ -346,6 +423,15 @@ class CoverageWizardVisualizer {
   }
 
   keyboardTarget(direction = 0) {
+    if (this.scene !== 'infrastructure') {
+      if (this.detailMode !== 'overview') return null;
+      const targets = this.hitRegions.filter((region) => region.type === 'scene-item');
+      if (!targets.length) return null;
+      this.selectedItem = (this.selectedItem + direction + targets.length) % targets.length;
+      const target = targets[this.selectedItem];
+      this.setHoverTarget(target);
+      return target;
+    }
     if (this.detailMode === 'overview') {
       this.selectedRack = (this.selectedRack + direction + 3) % 3;
       this.setHoverTarget({ id: 'rack-' + this.selectedRack });
@@ -419,8 +505,9 @@ class CoverageWizardVisualizer {
     ];
     [this.accent, this.accentRgb] = accents[this.flowPhase];
     this.drawBoundary();
-    if (this.scene === 'infrastructure' && this.detailMode !== 'overview') {
-      this.drawInfrastructureDetail(time);
+    if (this.detailMode !== 'overview') {
+      if (this.scene === 'infrastructure') this.drawInfrastructureDetail(time);
+      else this.drawExpandedScene(time);
       return;
     }
     const drawers = {
@@ -603,6 +690,78 @@ class CoverageWizardVisualizer {
     context.restore();
   }
 
+  drawHeartbeatTrace(x, y, width, time, color = '#35d8ff', phase = 0, strength = 1) {
+    const context = this.context;
+    const amplitude = 9 * strength;
+    const speed = 0.72;
+    const cycles = Math.max(2, Math.min(3.2, width / 55));
+    const points = [
+      [0, 0],
+      [0.12, 0],
+      [0.18, -0.13],
+      [0.24, 0],
+      [0.33, 0],
+      [0.37, 0.2],
+      [0.4, -1],
+      [0.435, 0.46],
+      [0.49, 0],
+      [0.58, -0.06],
+      [0.66, -0.27],
+      [0.75, -0.08],
+      [0.84, 0],
+      [1, 0],
+    ];
+    const heartbeatAt = (position) => {
+      const cycle = ((position * cycles - time * speed - phase) % 1 + 1) % 1;
+      for (let index = 1; index < points.length; index += 1) {
+        if (cycle > points[index][0]) continue;
+        const previous = points[index - 1];
+        const next = points[index];
+        const progress = (cycle - previous[0]) / (next[0] - previous[0]);
+        return previous[1] + (next[1] - previous[1]) * progress;
+      }
+      return 0;
+    };
+
+    context.save();
+    context.beginPath();
+    context.rect(x - 2, y - amplitude - 3, width + 4, amplitude * 1.7 + 6);
+    context.clip();
+    context.strokeStyle = 'rgba(81,121,145,.2)';
+    context.lineWidth = 1;
+    context.beginPath();
+    context.moveTo(x, Math.round(y) + 0.5);
+    context.lineTo(x + width, Math.round(y) + 0.5);
+    context.stroke();
+
+    context.strokeStyle = color;
+    context.globalAlpha = 0.78 + strength * 0.2;
+    context.lineWidth = 1.45;
+    context.lineJoin = 'round';
+    context.shadowBlur = 4;
+    context.shadowColor = color;
+    context.beginPath();
+    const samples = Math.max(32, Math.ceil(width / 1.5));
+    for (let index = 0; index <= samples; index += 1) {
+      const progress = index / samples;
+      const pointX = x + progress * width;
+      const pointY = y + heartbeatAt(progress) * amplitude;
+      if (index === 0) context.moveTo(pointX, pointY);
+      else context.lineTo(pointX, pointY);
+    }
+    context.stroke();
+
+    const sweepProgress = ((time * speed + phase + 0.4) % cycles + cycles) % cycles / cycles;
+    const sweepX = x + sweepProgress * width;
+    const sweepY = y + heartbeatAt(sweepProgress) * amplitude;
+    context.fillStyle = color;
+    context.globalAlpha = 1;
+    context.beginPath();
+    context.arc(sweepX, sweepY, 1.7, 0, Math.PI * 2);
+    context.fill();
+    context.restore();
+  }
+
   bezierPoint(start, controlA, controlB, end, progress) {
     const remaining = 1 - progress;
     return {
@@ -776,10 +935,7 @@ class CoverageWizardVisualizer {
     const barWidth = Math.max(14, width - 20);
     context.fillStyle = 'rgba(93,128,150,.14)';
     context.fillRect(left + 10, top + height - 11, barWidth, 2);
-    const value = recovering ? 0.82 : index === 1 ? 0.34 + (Math.sin(time * 2.7) + 1) * 0.08 : 0.68 + index * 0.08;
-    context.fillStyle = color;
-    context.globalAlpha = highlighted ? 0.96 : 0.62;
-    context.fillRect(left + 10, top + height - 11, barWidth * value, 2);
+    this.drawHeartbeatTrace(left + 10, top + height - 10, barWidth, time, color, index * 0.23, highlighted ? 1 : 0.72);
     context.restore();
   }
 
@@ -944,6 +1100,142 @@ class CoverageWizardVisualizer {
     return 1 - (1 - progress) ** 3;
   }
 
+  registerSceneRegion(region, time) {
+    this.hitRegions.push(region);
+    if (this.hoverTarget !== region.id) return;
+    const context = this.context;
+    const pulse = 0.62 + (Math.sin(time * 4) + 1) * 0.16;
+    context.save();
+    context.strokeStyle = 'rgba(61,255,179,' + pulse + ')';
+    context.fillStyle = 'rgba(61,255,179,.035)';
+    context.lineWidth = 1;
+    context.setLineDash([4, 5]);
+    context.shadowBlur = 8;
+    context.shadowColor = '#3dffb3';
+    context.fillRect(region.x - 5, region.y - 5, region.width + 10, region.height + 10);
+    context.strokeRect(region.x - 4.5, region.y - 4.5, region.width + 9, region.height + 9);
+    context.restore();
+  }
+
+  drawExpandedMetric(x, y, width, label, time, color, phase) {
+    const context = this.context;
+    context.save();
+    context.fillStyle = 'rgba(3,15,26,.9)';
+    context.strokeStyle = 'rgba(99,174,218,.22)';
+    context.fillRect(x, y, width, 43);
+    context.strokeRect(x + 0.5, y + 0.5, width - 1, 42);
+    context.fillStyle = 'rgba(166,194,211,.82)';
+    context.font = '600 6px Inter, Arial, sans-serif';
+    context.letterSpacing = '.8px';
+    context.textAlign = 'left';
+    context.fillText(label, x + 9, y + 12);
+    this.drawHeartbeatTrace(x + 9, y + 31, width - 18, time, color, phase, 0.72);
+    context.restore();
+  }
+
+  drawExpandedScene(time) {
+    const config = coverageExpansionData[this.scene];
+    if (!config) return;
+    const context = this.context;
+    const width = this.width;
+    const height = this.height;
+    const compact = width < 700;
+    const progress = this.transitionProgress();
+    const origin = this.zoomOrigin || { x: width * 0.42, y: height * 0.42, width: 40, height: 40 };
+    const target = { x: 18, y: 32, width: width - 36, height: height - 64 };
+    const frame = {
+      x: origin.x + (target.x - origin.x) * progress,
+      y: origin.y + (target.y - origin.y) * progress,
+      width: origin.width + (target.width - origin.width) * progress,
+      height: origin.height + (target.height - origin.height) * progress,
+    };
+    const colors = {
+      network: '#35d8ff',
+      cloud: '#35d8ff',
+      applications: '#b785ff',
+      industrial: '#ff9f43',
+      iot: '#3dffb3',
+      ai: '#8127ff',
+    };
+    const color = colors[this.scene] || '#35d8ff';
+
+    context.save();
+    context.fillStyle = 'rgba(3,14,24,' + (0.2 + progress * 0.45) + ')';
+    context.strokeStyle = 'rgba(53,216,255,' + (0.16 + progress * 0.25) + ')';
+    context.fillRect(frame.x, frame.y, frame.width, frame.height);
+    context.strokeRect(frame.x + 0.5, frame.y + 0.5, frame.width - 1, frame.height - 1);
+    context.restore();
+    if (progress < 0.14) return;
+
+    context.save();
+    context.globalAlpha = Math.min(1, (progress - 0.14) / 0.5);
+    context.translate(0, (1 - progress) * 26);
+    this.drawFlowTag(28, 78, String(this.selectedItem + 1).padStart(2, '0'), config.title, true, 'left');
+
+    const panelWidth = compact ? Math.min(300, width * 0.7) : Math.min(164, Math.max(118, width * 0.145));
+    const panelHeight = compact ? 52 : 62;
+    const panels = [];
+    if (compact) {
+      const startY = height * 0.11;
+      const available = Math.max(0, height * 0.63 - panelHeight * config.items.length);
+      const gap = available / Math.max(1, config.items.length - 1);
+      config.items.forEach((item, index) => {
+        panels.push({ x: (width - panelWidth) / 2, y: startY + index * (panelHeight + gap), item, index });
+      });
+    } else {
+      const margin = width * 0.055;
+      const gap = Math.max(12, (width - margin * 2 - panelWidth * config.items.length) / (config.items.length - 1));
+      config.items.forEach((item, index) => {
+        panels.push({ x: margin + index * (panelWidth + gap), y: height * 0.29, item, index });
+      });
+    }
+
+    panels.forEach((panel, index) => {
+      if (index > 0) {
+        const previous = panels[index - 1];
+        const start = compact
+          ? { x: previous.x + panelWidth / 2, y: previous.y + panelHeight }
+          : { x: previous.x + panelWidth, y: previous.y + panelHeight / 2 };
+        const end = compact
+          ? { x: panel.x + panelWidth / 2, y: panel.y }
+          : { x: panel.x, y: panel.y + panelHeight / 2 };
+        this.drawDownFlow(start, end, time + index * 0.24, color, index === this.selectedItem % config.items.length ? 1 : 0.72);
+      }
+      this.drawDevicePanel(
+        panel.x,
+        panel.y,
+        panelWidth,
+        panelHeight,
+        panel.item[0],
+        panel.item[1],
+        time + index * 0.17,
+        true,
+        index === this.selectedItem % config.items.length,
+      );
+    });
+
+    const collector = compact ? { x: width * 0.5, y: height - 108 } : { x: width * 0.5, y: height * 0.68 };
+    panels.forEach((panel, index) => {
+      if (compact && index !== this.selectedItem % panels.length && index !== panels.length - 1) return;
+      const start = compact
+        ? { x: panel.x + panelWidth / 2, y: panel.y + panelHeight }
+        : { x: panel.x + panelWidth / 2, y: panel.y + panelHeight };
+      this.drawColorLine(start, collector, '#8127ff', compact ? 0.16 : 0.12, 1, true);
+      this.drawColorPacket([start, collector], time * 0.14 + index * 0.18, '#b785ff', 1.8, 0.65);
+    });
+    this.drawNode(collector.x, collector.y, compact ? 18 : 22, 'CLOUDMON CONTEXT', time * 2.1);
+
+    const metricGap = compact ? 7 : 12;
+    const metricWidth = compact ? (width - 36 - metricGap * 2) / 3 : Math.min(180, (width * 0.62 - metricGap * 2) / 3);
+    const metricsWidth = metricWidth * 3 + metricGap * 2;
+    const metricStart = (width - metricsWidth) / 2;
+    const metricY = height - 61;
+    config.metrics.forEach((metric, index) => {
+      this.drawExpandedMetric(metricStart + index * (metricWidth + metricGap), metricY, metricWidth, metric, time, color, index * 0.21);
+    });
+    context.restore();
+  }
+
   drawDownFlow(start, end, time, color = '#35d8ff', strength = 1) {
     this.drawColorLine(start, end, color, 0.2 + strength * 0.35, 1.3);
     for (let packet = 0; packet < 3; packet += 1) {
@@ -1084,12 +1376,15 @@ class CoverageWizardVisualizer {
       });
     }
 
-    context.fillStyle = 'rgba(81,121,145,.16)';
-    context.fillRect(contentLeft, y + height - 15, contentWidth, 3);
-    const activity = 0.48 + (Math.sin(time * 2.2 + x * 0.01) + 1) * 0.19;
-    context.fillStyle = hovered ? '#3dffb3' : active ? '#35d8ff' : '#527c95';
-    context.globalAlpha = hovered ? 1 : 0.72;
-    context.fillRect(contentLeft, y + height - 15, contentWidth * activity, 3);
+    this.drawHeartbeatTrace(
+      contentLeft,
+      y + height - 14,
+      contentWidth,
+      time,
+      hovered ? '#3dffb3' : active ? '#35d8ff' : '#527c95',
+      x * 0.003 + y * 0.002,
+      hovered ? 1 : active ? 0.9 : 0.65,
+    );
     context.beginPath();
     context.arc(x + width - 11, y + height - 10, 2.4, 0, Math.PI * 2);
     context.fillStyle = '#3dffb3';
@@ -1300,11 +1595,15 @@ class CoverageWizardVisualizer {
       context.letterSpacing = '.75px';
       context.textAlign = 'left';
       context.fillText(module, x + 9, y + 14);
-      const value = 0.32 + (Math.sin(time * (1.4 + index * 0.17) + index) + 1) * 0.24;
-      context.fillStyle = 'rgba(67,116,143,.18)';
-      context.fillRect(x + 9, y + moduleHeight - 13, moduleWidth - 18, 3);
-      context.fillStyle = index === 2 ? '#8127ff' : '#35d8ff';
-      context.fillRect(x + 9, y + moduleHeight - 13, (moduleWidth - 18) * value, 3);
+      this.drawHeartbeatTrace(
+        x + 9,
+        y + moduleHeight - 12,
+        moduleWidth - 18,
+        time,
+        index === 2 ? '#8127ff' : '#35d8ff',
+        index * 0.19,
+        0.7,
+      );
     });
 
     const agent = compact ? { x: width * 0.29, y: height * 0.64 } : { x: width * 0.7, y: height * 0.36 };
@@ -1393,7 +1692,23 @@ class CoverageWizardVisualizer {
       this.drawLine(a, b, index === (this.step + 2) % edges.length ? 0.65 : 0.22);
       this.drawPacket([a, b], (time * 0.2 + index * 0.14) % 1, 2.2);
     });
-    nodes.forEach((node, index) => this.drawNode(node.x, node.y, index === 5 ? 17 : 12, node.label, time * 2 + index));
+    nodes.forEach((node, index) => {
+      const radius = index === 5 ? 17 : 12;
+      this.drawNode(node.x, node.y, radius, node.label, time * 2 + index);
+      this.registerSceneRegion(
+        {
+          id: 'network-' + index,
+          type: 'scene-item',
+          index,
+          detailIndex: [0, 0, 1, 2, 2, 3, 4][index],
+          x: node.x - radius,
+          y: node.y - radius,
+          width: radius * 2,
+          height: radius * 2,
+        },
+        time,
+      );
+    });
     this.drawStepFocus(nodes[5].x, nodes[5].y, time);
   }
 
@@ -1423,6 +1738,13 @@ class CoverageWizardVisualizer {
     this.drawBox(source.x - 42, source.y - 36, 84, 72, 'ON-PREM', true);
     this.drawCloudShape(cloudA.x - 49, cloudA.y - 28, 98, 56, 'REGION A');
     this.drawCloudShape(cloudB.x - 49, cloudB.y - 28, 98, 56, 'REGION B');
+    [
+      { x: source.x - 42, y: source.y - 36, width: 84, height: 72 },
+      { x: cloudA.x - 49, y: cloudA.y - 28, width: 98, height: 56 },
+      { x: cloudB.x - 49, y: cloudB.y - 28, width: 98, height: 56 },
+    ].forEach((region, index) =>
+      this.registerSceneRegion({ ...region, id: 'cloud-' + index, type: 'scene-item', index, detailIndex: [0, 2, 2][index] }, time),
+    );
     const paths = [[source,cloudA],[source,cloudB],[cloudA,cloudB]];
     paths.forEach((path, index) => {
       this.drawLine(path[0], path[1], index === this.step ? 0.62 : 0.25, index === 2);
@@ -1449,7 +1771,22 @@ class CoverageWizardVisualizer {
       this.drawLine(path[0], path[1], index === this.step + 2 ? 0.64 : 0.24);
       this.drawPacket(path, (time * 0.27 + index * 0.19) % 1, 2.2);
     });
-    items.forEach((item, index) => this.drawBox(item.x, item.y, item.w, item.h, item.label, index === 3 || (this.step === 2 && index === 4)));
+    items.forEach((item, index) => {
+      this.drawBox(item.x, item.y, item.w, item.h, item.label, index === 3 || (this.step === 2 && index === 4));
+      this.registerSceneRegion(
+        {
+          id: 'applications-' + index,
+          type: 'scene-item',
+          index,
+          detailIndex: [0, 1, 3, 2, 4][index],
+          x: item.x,
+          y: item.y,
+          width: item.w,
+          height: item.h,
+        },
+        time,
+      );
+    });
     this.drawStepFocus(centers[3].x, centers[3].y, time);
   }
 
@@ -1488,6 +1825,14 @@ class CoverageWizardVisualizer {
     const gearB = { x:width * 0.57, y:height * 0.48 };
     this.drawGear(gearA.x, gearA.y, 34, 12, time * 0.28, 'MACHINE');
     this.drawGear(gearB.x, gearB.y, 23, 10, -time * 0.38, 'DRIVE');
+    [
+      { x: plc.x, y: plc.y, width: plc.w, height: plc.h },
+      { x: gearA.x - 38, y: gearA.y - 38, width: 76, height: 76 },
+      { x: gearB.x - 27, y: gearB.y - 27, width: 54, height: 54 },
+      { x: controller.x, y: controller.y, width: controller.w, height: controller.h },
+    ].forEach((region, index) =>
+      this.registerSceneRegion({ ...region, id: 'industrial-' + index, type: 'scene-item', index, detailIndex: [1, 2, 3, 4][index] }, time),
+    );
     const plcCenter = { x:plc.x + plc.w, y:plc.y + plc.h / 2 };
     const controlCenter = { x:controller.x, y:controller.y + controller.h / 2 };
     const path = [plcCenter, gearA, gearB, controlCenter];
@@ -1514,8 +1859,16 @@ class CoverageWizardVisualizer {
       this.drawLine(device, gateway, index % 3 === this.step ? 0.48 : 0.17, true);
       this.drawNode(device.x, device.y, 8, device.label, time * 2 + index);
       this.drawPacket([device, gateway], (time * 0.12 + index * 0.1) % 1, 1.9);
+      this.registerSceneRegion(
+        { id: 'iot-device-' + index, type: 'scene-item', index, detailIndex: 0, x: device.x - 9, y: device.y - 9, width: 18, height: 18 },
+        time,
+      );
     });
     this.drawNode(gateway.x, gateway.y, 24, 'EDGE GATEWAY', time * 2.4);
+    this.registerSceneRegion(
+      { id: 'iot-gateway', type: 'scene-item', index: devices.length, detailIndex: 1, x: gateway.x - 24, y: gateway.y - 24, width: 48, height: 48 },
+      time,
+    );
     this.drawStepFocus(gateway.x, gateway.y, time);
   }
 
@@ -1542,8 +1895,16 @@ class CoverageWizardVisualizer {
       const end = { x:memory.x, y:memory.y + memory.h / 2 };
       this.drawLine(start, end, 0.23);
       this.drawPacket([start,end], (time * 0.2 + cardIndex * 0.26) % 1);
+      this.registerSceneRegion(
+        { id: 'ai-gpu-' + cardIndex, type: 'scene-item', index: cardIndex, detailIndex: 1, x, y, width: cardWidth, height: cardHeight },
+        time,
+      );
     });
     this.drawBox(memory.x, memory.y, memory.w, memory.h, 'MEMORY BUS', this.step === 2);
+    this.registerSceneRegion(
+      { id: 'ai-memory', type: 'scene-item', index: xs.length, detailIndex: 3, x: memory.x, y: memory.y, width: memory.w, height: memory.h },
+      time,
+    );
     this.drawStepFocus(memory.x + memory.w / 2, memory.y + memory.h / 2, time);
   }
 }
@@ -1595,34 +1956,39 @@ let activeCoverageKey = 'infrastructure';
 let coverageAnimationPlaying = false;
 
 const syncTopologyDrilldown = () => {
-  const infrastructureActive = activeCoverageKey === 'infrastructure';
   const mode = coverageVisualizer.getDetailMode();
-  const detailActive = infrastructureActive && mode !== 'overview';
+  const detailActive = mode !== 'overview';
   wizardTopologyBack.hidden = !detailActive;
-  wizardTopologyBack.textContent = mode === 'rack' ? '← Full topology' : mode === 'switch' ? '← Back to rack' : '← Back to switch';
-  coverageWizardCanvas?.classList.toggle('is-interactive', infrastructureActive);
+  wizardTopologyBack.textContent =
+    activeCoverageKey === 'infrastructure'
+      ? mode === 'rack'
+        ? '← Full topology'
+        : mode === 'switch'
+          ? '← Back to rack'
+          : '← Back to switch'
+      : '← ' + coverageWizardData[activeCoverageKey].label + ' overview';
+  coverageWizardCanvas?.classList.add('is-interactive');
   if (coverageWizardCanvas) {
-    coverageWizardCanvas.tabIndex = infrastructureActive ? 0 : -1;
-    coverageWizardCanvas.setAttribute('aria-hidden', String(!infrastructureActive));
-    if (infrastructureActive) {
-      coverageWizardCanvas.setAttribute('role', 'button');
-      coverageWizardCanvas.setAttribute(
-        'aria-label',
-        mode === 'overview'
+    coverageWizardCanvas.tabIndex = 0;
+    coverageWizardCanvas.setAttribute('aria-hidden', 'false');
+    coverageWizardCanvas.setAttribute('role', 'button');
+    coverageWizardCanvas.setAttribute(
+      'aria-label',
+      activeCoverageKey === 'infrastructure'
+        ? mode === 'overview'
           ? 'Interactive rack topology. Use the pointer or arrow keys to select a rack, then press Enter to expand it.'
           : mode === 'rack'
             ? 'Expanded rack network path. Select the core switch to reveal connected equipment.'
             : mode === 'switch'
               ? 'Expanded switch connections. Select a server, storage array or management host for monitored detail.'
-              : 'Expanded monitored device with its Cloudmon telemetry path.',
-      );
-    } else {
-      coverageWizardCanvas.removeAttribute('role');
-      coverageWizardCanvas.removeAttribute('aria-label');
-    }
+              : 'Expanded monitored device with its Cloudmon telemetry path.'
+        : mode === 'overview'
+          ? 'Interactive ' + coverageWizardData[activeCoverageKey].label + ' topology. Select any node to expand its live monitored path.'
+          : 'Expanded ' + coverageWizardData[activeCoverageKey].label + ' live monitored path. Press Escape or use the back button to return.',
+    );
   }
-  wizardStage?.setAttribute('role', infrastructureActive ? 'group' : 'img');
-  if (wizardStage) wizardStage.dataset.topologyMode = infrastructureActive ? mode : 'overview';
+  wizardStage?.setAttribute('role', 'group');
+  if (wizardStage) wizardStage.dataset.topologyMode = mode;
 };
 
 const syncCoverageAnimationControls = () => {
@@ -1664,6 +2030,7 @@ const openCoverageWizard = (card) => {
   wizardSummary.textContent = $('p', card)?.textContent || '';
   wizardSceneLabel.textContent = category.label;
   wizardSignals.forEach((signal, index) => { signal.textContent = category.signals[index]; });
+  wizardStepDescription.textContent = 'Watch the topology trace live telemetry, then select any node to expand its monitored path.';
   wizardStage?.setAttribute('aria-label', cardTitle + ' animated topology showing signals, context, impact and guided response in one continuous diagram');
   card.classList.add('is-wizard-source');
   coverageWizard.showModal();
@@ -1693,7 +2060,6 @@ const closeCoverageWizard = () => {
 
 coverageCards.forEach((card) => scope.on(card, 'click', () => openCoverageWizard(card)));
 scope.on(coverageWizardCanvas, 'pointermove', (event) => {
-  if (activeCoverageKey !== 'infrastructure') return;
   const rect = coverageWizardCanvas.getBoundingClientRect();
   const target = coverageVisualizer.hitTest(event.clientX - rect.left, event.clientY - rect.top);
   coverageVisualizer.setHoverTarget(target);
@@ -1704,14 +2070,12 @@ scope.on(coverageWizardCanvas, 'pointerleave', () => {
   coverageWizardCanvas.style.cursor = 'default';
 });
 scope.on(coverageWizardCanvas, 'click', (event) => {
-  if (activeCoverageKey !== 'infrastructure') return;
   const rect = coverageWizardCanvas.getBoundingClientRect();
   if (!coverageVisualizer.activateAt(event.clientX - rect.left, event.clientY - rect.top)) return;
   if (!coverageAnimationPlaying) resumeCoverageAnimation();
   syncTopologyDrilldown();
 });
 scope.on(coverageWizardCanvas, 'keydown', (event) => {
-  if (activeCoverageKey !== 'infrastructure') return;
   if (event.key === 'Escape' && coverageVisualizer.getDetailMode() !== 'overview') {
     event.preventDefault();
     coverageVisualizer.backDetail();
