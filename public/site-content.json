@@ -18,7 +18,10 @@
     ".footer-message span": "Colombo · Sri Lanka",
     "#contact-form label:nth-child(1) > span": "First Name *",
     "#contact-form label:nth-child(2) > span": "Last Name *",
-    "#contact-form label:nth-child(3) > span": "Email *"
+    "#contact-form label:nth-child(3) > span": "Email *",
+    ".solution-list .solution-row:nth-child(1) h3": "Observability Platform",
+    ".solution-list .solution-row:nth-child(2) h3": "Smart Solution",
+    ".solution-list .solution-row:nth-child(3) h3": "AI Semi Conductors"
   },
   "html": {
     ".desktop-nav": "<a href='/story'>Our Story</a><a href='/solutions'>Solutions</a><a href='/services'>Services</a><a href='/contact'>Contact</a><button class='partner-button' type='button'>Become a Distributor</button>",

@@ -2,6 +2,8 @@ import { createRouteLifecycle } from './route-lifecycle.js';
 import { APP_ROUTES, ROUTE_ALIASES, SITE_ORIGIN } from './routes.config.js';
 import { captureException, trackPageView } from './telemetry.js';
 import { ensureCookieConsentUI, initCookieConsent } from './cookie-consent.js';
+import { ensureSharedFooter } from './shared-footer.js';
+import './shared-footer.css';
 import homeStyles from './styles.css?url';
 import cloudmonStyles from './cloudmon.css?url';
 import miphiStyles from './miphi.css?url';
@@ -207,6 +209,7 @@ async function renderRoute({ restore, focus = true } = {}) {
     if (view) {
       document.body.innerHTML = ('body' in view && view.body) || '<div id="app"></div>';
       await view.mount(scope);
+      ensureSharedFooter(route?.view);
     } else {
       renderMessage('Page not found', 'This address does not match a DeepIQ page.');
     }
