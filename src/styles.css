@@ -39,27 +39,6 @@ button, input, textarea { font: inherit; }
 .brand img { width:27px; height:43px; object-fit:contain; margin-right:9px; flex:none; }
 .brand b { margin-left:.2em; color:#025EAD; font-weight:600; }
 
-.desktop-nav { display:flex; height:100%; align-items:center; gap:clamp(20px,2.4vw,44px); font:400 13px/1 var(--sans); }
-.desktop-nav a { position:relative; color:#dbe1e9; }
-.desktop-nav>a::after,.nav-solutions-trigger::after { content:""; position:absolute; left:0; right:100%; bottom:-8px; height:1px; background:var(--blue); transition:right .3s; }
-.desktop-nav>a:hover::after,.desktop-nav>a:focus-visible::after,.nav-solutions:hover .nav-solutions-trigger::after,.nav-solutions:focus-within .nav-solutions-trigger::after { right:0; }
-.nav-solutions { position:relative; display:flex; height:100%; align-items:center; }
-.nav-solutions-trigger { display:inline-flex; align-items:center; gap:8px; }
-.nav-caret { width:6px; height:6px; margin-top:-3px; border-right:1px solid #74caff; border-bottom:1px solid #74caff; transform:rotate(45deg); transition:transform .24s ease; }
-.nav-solutions:hover .nav-caret,.nav-solutions:focus-within .nav-caret { transform:translateY(3px) rotate(225deg); }
-.solutions-dropdown { position:absolute; z-index:5; top:calc(100% + 10px); left:50%; width:min(390px,calc(100vw - 48px)); padding:13px; border:1px solid rgba(93,184,255,.24); background:rgba(3,10,18,.97); box-shadow:0 24px 65px rgba(0,0,0,.48),inset 0 1px rgba(255,255,255,.04); -webkit-backdrop-filter:blur(20px) saturate(135%); backdrop-filter:blur(20px) saturate(135%); opacity:0; visibility:hidden; pointer-events:none; transform:translate(-50%,10px); transform-origin:top center; transition:opacity .22s ease,transform .22s ease,visibility 0s linear .22s; }
-.solutions-dropdown::before { content:""; position:absolute; right:0; bottom:100%; left:0; height:12px; }
-.nav-solutions:hover .solutions-dropdown,.nav-solutions:focus-within .solutions-dropdown { opacity:1; visibility:visible; pointer-events:auto; transform:translate(-50%,0); transition-delay:0s; }
-.solutions-dropdown>p { margin:0; padding:7px 9px 13px; color:#6f8294; font-size:8px; letter-spacing:.2em; }
-.solutions-dropdown>a { display:grid; grid-template-columns:28px minmax(0,1fr) 24px; gap:10px; align-items:center; min-height:64px; padding:10px 11px; border-top:1px solid rgba(118,176,216,.13); transition:background .22s ease,color .22s ease; }
-.solutions-dropdown>a:hover,.solutions-dropdown>a:focus-visible { background:linear-gradient(90deg,rgba(8,124,255,.19),rgba(8,124,255,.035)); color:white; }
-.solutions-dropdown>a:focus-visible,.nav-solutions-trigger:focus-visible { outline:2px solid var(--blue-bright); outline-offset:2px; }
-.solution-dropdown-no { color:#2e9cff; font-size:8px; letter-spacing:.12em; }
-.solutions-dropdown>a>span:nth-child(2) { display:grid; gap:5px; min-width:0; }
-.solutions-dropdown strong { color:#eef6ff; font-size:13px; font-weight:500; line-height:1.15; }
-.solutions-dropdown small { color:#75889a; font-size:9px; line-height:1; letter-spacing:.08em; text-transform:uppercase; }
-.solutions-dropdown svg { width:18px; height:18px; fill:none; stroke:#35d8ff; stroke-width:1.25; transition:transform .22s ease; }
-.solutions-dropdown>a:hover svg,.solutions-dropdown>a:focus-visible svg { transform:translate(2px,-2px); }
 .partner-button { display:inline-flex; align-items:center; justify-content:center; text-align:center; border:1px solid rgba(140,203,255,.32); border-radius:11px; padding:11px 16px; background:linear-gradient(145deg,rgba(46,156,255,.25),rgba(8,58,112,.4)); color:var(--white); -webkit-backdrop-filter:blur(13px) saturate(160%); backdrop-filter:blur(13px) saturate(160%); box-shadow:inset 1px 1px 0 rgba(255,255,255,.26),0 8px 22px rgba(0,0,0,.24); font:500 11px/1 var(--sans); letter-spacing:.08em; text-transform:uppercase; white-space:nowrap; cursor:default; transition:transform .25s ease,background .25s ease,box-shadow .25s ease; }
 .partner-button:hover { transform:translateY(-2px); background:linear-gradient(145deg,rgba(57,166,255,.38),rgba(8,69,132,.5)); box-shadow:inset 1px 1px 0 rgba(255,255,255,.32),0 12px 26px rgba(0,0,0,.28),0 0 18px rgba(46,156,255,.15); }
 .menu-toggle { display:none; width:44px; height:44px; border:0; background:transparent; cursor:pointer; padding:10px; z-index:201; }

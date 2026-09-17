@@ -3,7 +3,10 @@ import { APP_ROUTES, ROUTE_ALIASES, SITE_ORIGIN } from './routes.config.js';
 import { captureException, trackPageView } from './telemetry.js';
 import { ensureCookieConsentUI, initCookieConsent } from './cookie-consent.js';
 import { ensureSharedFooter } from './shared-footer.js';
+import { ensureSharedNavigation } from './shared-navigation.js';
 import './shared-footer.css';
+import './shared-navigation.css';
+import './shared-layout.css';
 import homeStyles from './styles.css?url';
 import cloudmonStyles from './cloudmon.css?url';
 import miphiStyles from './miphi.css?url';
@@ -208,6 +211,7 @@ async function renderRoute({ restore, focus = true } = {}) {
     window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     if (view) {
       document.body.innerHTML = ('body' in view && view.body) || '<div id="app"></div>';
+      if (route?.view !== 'home') ensureSharedNavigation(route?.view, scope);
       await view.mount(scope);
       ensureSharedFooter(route?.view);
     } else {

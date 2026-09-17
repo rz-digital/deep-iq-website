@@ -14,6 +14,7 @@ const browserFiles = [
   'src/content-validation.js',
   'src/cookie-consent.js',
   'src/shared-footer.js',
+  'src/shared-navigation.js',
   'src/views/**/*.js',
 ];
 

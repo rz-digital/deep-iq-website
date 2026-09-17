@@ -1,5 +1,6 @@
 import { assertPageContent, assertSiteContent } from './content-validation.js';
 import { captureException } from './telemetry.js';
+import { ensureSharedNavigation } from './shared-navigation.js';
 
 export default async function mount(scope) {
   const $ = (selector, scope = document) => scope.querySelector(selector);
@@ -462,5 +463,6 @@ export default async function mount(scope) {
   prepareFooterStructure();
   prepareWhatsappButton();
   await loadSiteContent();
+  ensureSharedNavigation('home', scope);
   initializeSite();
 }

@@ -2,6 +2,11 @@ export default function mount(scope) {
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const pageColors = getComputedStyle(document.documentElement);
+  const diagramColors = {
+    bright: pageColors.getPropertyValue('--blue-bright').trim(),
+    cyan: pageColors.getPropertyValue('--cyan').trim(),
+  };
 
   const header = $('[data-header]');
   const progress = $('.reading-progress span');
@@ -66,21 +71,9 @@ export default function mount(scope) {
     );
   }
 
-  const pointer = { x: 0, y: 0 };
-  scope.on(
-    window,
-    'pointermove',
-    (event) => {
-      pointer.x = event.clientX / Math.max(innerWidth, 1) - 0.5;
-      pointer.y = event.clientY / Math.max(innerHeight, 1) - 0.5;
-    },
-    { passive: true },
-  );
-
   class ConnectedField {
-    constructor(canvas, mode) {
+    constructor(canvas) {
       this.canvas = canvas;
-      this.mode = mode;
       this.context = canvas.getContext('2d');
       this.width = 0;
       this.height = 0;
@@ -134,83 +127,6 @@ export default function mount(scope) {
       context.restore();
     }
 
-    polygon(center, radius, sides, rotation, color) {
-      const context = this.context;
-      if (!context) return;
-      context.beginPath();
-      for (let index = 0; index < sides; index += 1) {
-        const angle = rotation + (index / sides) * Math.PI * 2;
-        const x = center.x + Math.cos(angle) * radius;
-        const y = center.y + Math.sin(angle) * radius;
-        if (index === 0) context.moveTo(x, y);
-        else context.lineTo(x, y);
-      }
-      context.closePath();
-      context.strokeStyle = color;
-      context.lineWidth = 1;
-      context.stroke();
-    }
-
-    drawHero(time) {
-      const context = this.context;
-      if (!context) return;
-      const seconds = time * 0.001;
-      const compact = this.width < 760;
-      const center = {
-        x: this.width * (compact ? 0.75 : 0.79) + pointer.x * 14,
-        y: this.height * 0.49 + pointer.y * 11,
-      };
-      const radius = Math.min(this.width, this.height) * (compact ? 0.2 : 0.27);
-      const colors = ['#35d8ff', '#8a72ff', '#45efad', '#087cff', '#35d8ff'];
-      const phases = [-2.7, -1.6, -0.45, 0.62, 1.75];
-      const nodes = phases.map((phase, index) => ({
-        x: center.x + Math.cos(phase) * radius * (index === 3 ? 0.84 : 1),
-        y: center.y + Math.sin(phase) * radius * (index === 3 ? 0.84 : 1),
-      }));
-
-      nodes.forEach((node, index) => {
-        const bend = {
-          x: center.x + (node.x - center.x) * 0.52,
-          y: center.y + (node.y - center.y) * 0.2,
-        };
-        context.beginPath();
-        context.moveTo(center.x, center.y);
-        context.quadraticCurveTo(bend.x, bend.y, node.x, node.y);
-        context.strokeStyle = colors[index];
-        context.globalAlpha = 0.28;
-        context.lineWidth = 1;
-        context.stroke();
-        context.globalAlpha = 1;
-
-        const travel = (seconds * (0.14 + index * 0.011) + index * 0.19) % 1;
-        const inverse = 1 - travel;
-        const packet = {
-          x: inverse * inverse * center.x + 2 * inverse * travel * bend.x + travel * travel * node.x,
-          y: inverse * inverse * center.y + 2 * inverse * travel * bend.y + travel * travel * node.y,
-        };
-        this.dot(packet, 2.2, colors[index], 12);
-        this.dot(node, 4, colors[index], 10);
-        context.beginPath();
-        context.arc(node.x, node.y, 10 + Math.sin(seconds * 1.7 + index) * 2, 0, Math.PI * 2);
-        context.strokeStyle = colors[index];
-        context.globalAlpha = 0.19;
-        context.stroke();
-        context.globalAlpha = 1;
-      });
-
-      for (let ring = 0; ring < 3; ring += 1) {
-        context.beginPath();
-        context.arc(center.x, center.y, 36 + ring * 18 + Math.sin(seconds + ring) * 2, 0, Math.PI * 2);
-        context.strokeStyle = ring === 1 ? '#8a72ff' : '#35d8ff';
-        context.globalAlpha = 0.16 - ring * 0.025;
-        context.stroke();
-      }
-      context.globalAlpha = 1;
-      this.polygon(center, 27, 6, seconds * 0.16, '#35d8ff');
-      this.polygon(center, 16, 4, Math.PI / 4 - seconds * 0.12, '#8a72ff');
-      this.dot(center, 4, '#45efad', 15);
-    }
-
     drawFuture(time) {
       const context = this.context;
       if (!context) return;
@@ -225,12 +141,19 @@ export default function mount(scope) {
           const dx = mapped[left].x - mapped[right].x;
           const dy = mapped[left].y - mapped[right].y;
           const distance = Math.hypot(dx, dy);
-          if (distance < 145) this.line(mapped[left], mapped[right], '#35d8ff', (1 - distance / 145) * 0.18);
+          if (distance < 145) {
+            this.line(mapped[left], mapped[right], diagramColors.cyan, (1 - distance / 145) * 0.18);
+          }
         }
       }
       mapped.forEach((point, index) => {
         const active = (Math.floor(seconds * 2) + index) % 7 === 0;
-        this.dot(point, active ? 2.4 : 1.2, index % 5 === 0 ? '#45efad' : '#35d8ff', active ? 10 : 0);
+        this.dot(
+          point,
+          active ? 2.4 : 1.2,
+          index % 5 === 0 ? diagramColors.bright : diagramColors.cyan,
+          active ? 10 : 0,
+        );
       });
     }
 
@@ -238,16 +161,13 @@ export default function mount(scope) {
       const context = this.context;
       if (!context || !this.width || !this.height) return;
       context.clearRect(0, 0, this.width, this.height);
-      if (this.mode === 'hero') this.drawHero(time);
-      else this.drawFuture(time);
+      this.drawFuture(time);
       if (!reducedMotion) this.frame = scope.requestAnimationFrame((nextTime) => this.draw(nextTime));
     }
   }
 
-  const heroCanvas = $('#rayan-network-canvas');
-  if (heroCanvas instanceof HTMLCanvasElement) new ConnectedField(heroCanvas, 'hero');
   const futureCanvas = $('#rayan-future-canvas');
-  if (futureCanvas instanceof HTMLCanvasElement) new ConnectedField(futureCanvas, 'future');
+  if (futureCanvas instanceof HTMLCanvasElement) new ConnectedField(futureCanvas);
 
   const year = $('[data-year]');
   if (year) year.textContent = String(new Date().getFullYear());

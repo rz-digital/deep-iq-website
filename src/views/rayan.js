@@ -3,7 +3,7 @@ export default {
   title: 'Rayan Automation Solutions | DeepIQ',
   description:
     'Rayan Automation Solutions connects intelligent hardware, software and Smart Hub technology for residential, commercial and industrial environments.',
-  theme: '#031019',
+  theme: '#03070d',
   body: `
     <button class="skip-link" type="button" data-skip-content>Skip to content</button>
     <div class="reading-progress" aria-hidden="true"><span></span></div>
@@ -40,7 +40,6 @@ export default {
 
     <main id="main-content">
       <section class="rayan-hero" id="top" aria-labelledby="rayan-title">
-        <canvas id="rayan-network-canvas" aria-hidden="true"></canvas>
         <div class="hero-grid" aria-hidden="true"></div>
         <div class="hero-orbit orbit-one" aria-hidden="true"></div>
         <div class="hero-orbit orbit-two" aria-hidden="true"></div>
@@ -55,6 +54,80 @@ export default {
             <a class="primary-button" href="/contact">Explore with DeepIQ <span aria-hidden="true">&nearr;</span></a>
             <a class="ghost-button" href="/rayan/smart-hub">Discover Rayan <span aria-hidden="true">&darr;</span></a>
           </div>
+        </div>
+
+        <div class="rayan-hero-visual" role="img" aria-label="Animated Rayan Smart Hub connects lighting, home controls, security, energy monitoring and climate control. Signals travel from devices to the hub and commands return to the connected environment.">
+          <svg viewBox="0 0 620 620" aria-hidden="true" focusable="false">
+            <defs>
+              <radialGradient id="rayan-hero-glow"><stop stop-color="var(--blue)" stop-opacity=".42"/><stop offset="1" stop-color="var(--blue)" stop-opacity="0"/></radialGradient>
+              <linearGradient id="rayan-hero-hub-top" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#147ac3"/><stop offset="1" stop-color="#082d52"/></linearGradient>
+              <linearGradient id="rayan-hero-hub-left" x1="0" x2="1"><stop stop-color="#04101c"/><stop offset="1" stop-color="#0a3257"/></linearGradient>
+              <linearGradient id="rayan-hero-hub-right" x1="0" y1="0" x2="1" y2="1"><stop stop-color="var(--blue)"/><stop offset="1" stop-color="#071b31"/></linearGradient>
+              <linearGradient id="rayan-hero-device-fill" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#0a2135"/><stop offset="1" stop-color="#050d17"/></linearGradient>
+            </defs>
+
+            <circle cx="310" cy="310" r="230" fill="url(#rayan-hero-glow)"/>
+            <circle class="rayan-hero-orbit" cx="310" cy="310" r="226"/>
+            <g class="rayan-hero-links">
+              <path id="rayan-hero-home-link" d="M164 192 C226 192 205 284 252 308"/>
+              <path id="rayan-hero-light-link" d="M310 126 V248"/>
+              <path id="rayan-hero-security-link" d="M454 192 C392 192 415 284 368 308"/>
+              <path id="rayan-hero-energy-link" d="M200 480 C246 480 230 392 284 355"/>
+              <path id="rayan-hero-climate-link" d="M420 480 C374 480 390 392 336 355"/>
+            </g>
+            <g class="rayan-hero-packets">
+              <circle r="3.5"><animateMotion dur="3.1s" repeatCount="indefinite"><mpath href="#rayan-hero-home-link"/></animateMotion></circle>
+              <circle r="3.5"><animateMotion dur="2.6s" begin="-1s" repeatCount="indefinite"><mpath href="#rayan-hero-light-link"/></animateMotion></circle>
+              <circle r="3.5"><animateMotion dur="3.4s" begin="-1.6s" repeatCount="indefinite"><mpath href="#rayan-hero-security-link"/></animateMotion></circle>
+              <circle r="3.5"><animateMotion dur="3.8s" begin="-.9s" repeatCount="indefinite"><mpath href="#rayan-hero-energy-link"/></animateMotion></circle>
+              <circle r="3.5"><animateMotion dur="3.3s" begin="-2s" repeatCount="indefinite"><mpath href="#rayan-hero-climate-link"/></animateMotion></circle>
+              <circle class="rayan-hero-command" r="3"><animateMotion dur="3.1s" begin="-1.55s" keyPoints="1;0" keyTimes="0;1" calcMode="linear" repeatCount="indefinite"><mpath href="#rayan-hero-home-link"/></animateMotion></circle>
+              <circle class="rayan-hero-command" r="3"><animateMotion dur="3.3s" begin="-.35s" keyPoints="1;0" keyTimes="0;1" calcMode="linear" repeatCount="indefinite"><mpath href="#rayan-hero-climate-link"/></animateMotion></circle>
+            </g>
+
+            <g class="rayan-hero-device">
+              <rect x="24" y="142" width="140" height="106" rx="6"/>
+              <g class="rayan-hero-icon"><path d="M73 192v-22l21-17 21 17v22H73Z M68 174l26-21 26 21 M88 192v-17h12v17"/><path d="M107 163c6-7 16-7 22 0m-17 5c3-3 9-3 12 0"/></g>
+              <text x="94" y="226">HOME CONTROL</text>
+            </g>
+            <g class="rayan-hero-device">
+              <rect x="246" y="32" width="128" height="94" rx="6"/>
+              <g class="rayan-hero-icon"><path d="M301 92h18m-15 5h12 M301 87v-6c-13-10-9-29 9-29s22 19 9 29v6h-18Z M310 42v-7 M290 50l-5-5m45 5 5-5 M285 67h-7m57 0h7"/></g>
+              <text x="310" y="116">LIGHTING</text>
+            </g>
+            <g class="rayan-hero-device">
+              <rect x="454" y="142" width="140" height="106" rx="6"/>
+              <g class="rayan-hero-icon"><path d="m524 156 23 9v15c0 15-15 25-23 29-8-4-23-14-23-29v-15l23-9Z M514 181l7 7 15-17"/></g>
+              <text x="524" y="226">SECURITY</text>
+            </g>
+            <g class="rayan-hero-device">
+              <rect x="52" y="432" width="148" height="110" rx="6"/>
+              <g class="rayan-hero-icon"><path d="M109 486a24 24 0 1 1 34 0 M126 463l12-11 M106 458l-5-3m25-13v-6m20 22 5-3 M127 472l-7 12h9l-6 14"/></g>
+              <text x="126" y="522">ENERGY</text>
+            </g>
+            <g class="rayan-hero-device">
+              <rect x="420" y="432" width="148" height="110" rx="6"/>
+              <g class="rayan-hero-icon"><path d="M479 448a6 6 0 0 1 12 0v29a12 12 0 1 1-12 0v-29Z M485 458v28"/><circle cx="485" cy="487" r="4"/><path d="M507 452v27m-12-20 24 13m-24 0 24-13m-12-7-4 4m4-4 4 4m-4 23-4-4m4 4 4-4"/></g>
+              <text x="494" y="522">CLIMATE</text>
+            </g>
+
+            <ellipse class="rayan-hero-hub-shadow" cx="310" cy="389" rx="92" ry="18"/>
+            <g class="rayan-hero-hub-rings">
+              <ellipse cx="310" cy="364" rx="115" ry="46"/>
+              <ellipse cx="310" cy="364" rx="137" ry="57"/>
+            </g>
+            <g class="rayan-hero-hub">
+              <path class="rayan-hero-hub-left" d="m232 288 78 42v48l-78-42v-48Z"/>
+              <path class="rayan-hero-hub-right" d="m310 330 78-42v48l-78 42v-48Z"/>
+              <path class="rayan-hero-hub-top" d="m232 288 78-42 78 42-78 42-78-42Z"/>
+              <path class="rayan-hero-hub-trim" d="m243 288 67-35 67 35-67 35-67-35Z"/>
+              <g class="rayan-hero-hub-mark"><path d="M291 281q19-14 38 0m-31 7q12-9 24 0m-17 6q5-4 10 0"/><circle cx="310" cy="300" r="2"/></g>
+              <path class="rayan-hero-hub-vents" d="m246 314 17 9m-17-2 17 9m-17-2 17 9"/>
+              <circle class="rayan-hero-hub-led" cx="366" cy="325" r="3"/>
+            </g>
+            <text class="rayan-hero-hub-title" x="310" y="432">RAYAN SMART HUB</text>
+            <text class="rayan-hero-visual-caption" x="310" y="574">CONNECTED DEVICES. COORDINATED ACTION.</text>
+          </svg>
         </div>
 
         <div class="hero-system" aria-label="Connected automation system">
@@ -130,17 +203,17 @@ export default {
           <span class="hub-visual-label label-status"><i></i> 3 ENVIRONMENTS ONLINE</span>
           <svg class="hub-connections" viewBox="0 0 760 620" preserveAspectRatio="none" aria-hidden="true">
             <defs>
-              <linearGradient id="rayan-line-home" x1="0" x2="1"><stop stop-color="#35d8ff" stop-opacity=".25"/><stop offset="1" stop-color="#35d8ff"/></linearGradient>
-              <linearGradient id="rayan-line-work" x1="1" x2="0"><stop stop-color="#8a72ff" stop-opacity=".25"/><stop offset="1" stop-color="#8a72ff"/></linearGradient>
-              <linearGradient id="rayan-line-industry" x1="1" x2="0"><stop stop-color="#45efad" stop-opacity=".25"/><stop offset="1" stop-color="#45efad"/></linearGradient>
+              <linearGradient id="rayan-line-home" x1="0" x2="1"><stop stop-color="var(--cyan)" stop-opacity=".25"/><stop offset="1" stop-color="var(--cyan)"/></linearGradient>
+              <linearGradient id="rayan-line-work" x1="1" x2="0"><stop stop-color="var(--violet)" stop-opacity=".25"/><stop offset="1" stop-color="var(--violet)"/></linearGradient>
+              <linearGradient id="rayan-line-industry" x1="1" x2="0"><stop stop-color="var(--blue-bright)" stop-opacity=".25"/><stop offset="1" stop-color="var(--blue-bright)"/></linearGradient>
             </defs>
             <path class="connection-path path-home" d="M380 310 C285 310 250 170 145 155"/>
             <path class="connection-path path-work" d="M380 310 C485 285 510 150 630 142"/>
             <path class="connection-path path-industry" d="M380 310 C485 350 510 487 630 492"/>
             <g class="connection-packets">
-              <circle r="4" fill="#35d8ff"><animateMotion dur="3.6s" repeatCount="indefinite" path="M145 155 C250 170 285 310 380 310"/></circle>
-              <circle r="4" fill="#8a72ff"><animateMotion dur="4.2s" begin="-.8s" repeatCount="indefinite" path="M630 142 C510 150 485 285 380 310"/></circle>
-              <circle r="4" fill="#45efad"><animateMotion dur="3.9s" begin="-1.7s" repeatCount="indefinite" path="M380 310 C485 350 510 487 630 492"/></circle>
+              <circle r="4" fill="var(--cyan)"><animateMotion dur="3.6s" repeatCount="indefinite" path="M145 155 C250 170 285 310 380 310"/></circle>
+              <circle r="4" fill="var(--violet)"><animateMotion dur="4.2s" begin="-.8s" repeatCount="indefinite" path="M630 142 C510 150 485 285 380 310"/></circle>
+              <circle r="4" fill="var(--blue-bright)"><animateMotion dur="3.9s" begin="-1.7s" repeatCount="indefinite" path="M380 310 C485 350 510 487 630 492"/></circle>
             </g>
           </svg>
           <div class="ecosystem-node home-node">
